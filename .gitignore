@@ -31,4 +31,3 @@ backend/**/__pycache__/
 apple_health_export/
 backend/output/*
 backend/examples/*
-backend/tests/*
