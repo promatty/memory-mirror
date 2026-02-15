@@ -3,76 +3,95 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 
-function TypeTester() {
-  const [scale, setScale] = useState(1)
+function VideoSearchAnimation() {
+  const [active, setActive] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setScale((prev) => (prev === 1 ? 1.5 : 1))
+      setActive((prev) => (prev + 1) % 3)
     }, 2000)
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div className="flex items-center justify-center h-full">
-      <motion.span
-        className="font-serif text-6xl md:text-8xl text-foreground"
-        animate={{ scale }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      >
-        Aa
-      </motion.span>
+    <div className="flex flex-col items-center justify-center h-full gap-3">
+      <svg className="w-16 h-16 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <div className="flex gap-2">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-12 h-16 rounded bg-foreground/20"
+            animate={{ 
+              scale: active === i ? 1.1 : 1,
+              opacity: active === i ? 1 : 0.3
+            }}
+            transition={{ duration: 0.3 }}
+          />
+        ))}
+      </div>
     </div>
   )
 }
 
-function LayoutAnimation() {
-  const [layout, setLayout] = useState(0)
+function VoiceAnimation() {
+  const [speaking, setSpeaking] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setLayout((prev) => (prev + 1) % 3)
+      setSpeaking((prev) => !prev)
     }, 2500)
     return () => clearInterval(interval)
   }, [])
 
-  const layouts = ["grid-cols-2 grid-rows-2", "grid-cols-3 grid-rows-1", "grid-cols-1 grid-rows-3"]
-
   return (
-    <div className="h-full p-4 flex items-center justify-center">
-      <motion.div className={`grid ${layouts[layout]} gap-2 w-full max-w-[140px]`} layout>
-        {[1, 2, 3].map((i) => (
+    <div className="flex items-center justify-center h-full">
+      <div className="flex gap-1 items-end h-16">
+        {[0, 1, 2, 3, 4].map((i) => (
           <motion.div
             key={i}
-            className="bg-primary/20 rounded-md min-h-[30px]"
-            layout
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="w-2 bg-foreground rounded-full"
+            animate={{ 
+              height: speaking ? [8, 32, 16, 40, 8][i] : 8
+            }}
+            transition={{ 
+              duration: 0.8,
+              delay: i * 0.1,
+              repeat: speaking ? Infinity : 0,
+              repeatType: "reverse"
+            }}
           />
         ))}
-      </motion.div>
+      </div>
     </div>
   )
 }
 
-function SpeedIndicator() {
-  const [progress, setProgress] = useState(0)
+function MemoryAnimation() {
+  const [highlightIndex, setHighlightIndex] = useState(0)
 
   useEffect(() => {
-    const timeout = setTimeout(() => setProgress(100), 500)
-    return () => clearTimeout(timeout)
+    const interval = setInterval(() => {
+      setHighlightIndex((prev) => (prev + 1) % 6)
+    }, 1500)
+    return () => clearInterval(interval)
   }, [])
 
   return (
-    <div className="flex flex-col items-center justify-center h-full gap-4">
-      <span className="text-3xl md:text-4xl font-sans font-medium text-foreground">100ms</span>
-      <span className="text-sm text-muted-foreground">Load Time</span>
-      <div className="w-full max-w-[120px] h-1.5 bg-foreground/10 rounded-full overflow-hidden">
-        <motion.div
-          className="h-full bg-primary rounded-full"
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.1 }}
-        />
+    <div className="h-full p-4 flex items-center justify-center overflow-hidden">
+      <div className="grid grid-cols-3 gap-2 w-full max-w-[140px]">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <motion.div
+            key={i}
+            className="bg-foreground/20 rounded-md h-[30px]"
+            animate={{ 
+              opacity: highlightIndex === i ? 1 : 0.3,
+              scale: highlightIndex === i ? 1.05 : 1
+            }}
+            transition={{ duration: 0.4 }}
+          />
+        ))}
       </div>
     </div>
   )
@@ -92,7 +111,7 @@ export function FeaturesSection() {
         </motion.p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Typography Card */}
+          {/* semantic search card */}
           <motion.div
             className="bg-secondary rounded-xl p-8 min-h-[280px] flex flex-col"
             initial={{ opacity: 0, y: 30 }}
@@ -104,15 +123,15 @@ export function FeaturesSection() {
             data-clickable
           >
             <div className="flex-1">
-              <TypeTester />
+              <VideoSearchAnimation />
             </div>
             <div className="mt-4">
-              <h3 className="font-serif text-xl text-foreground">Typography</h3>
-              <p className="text-muted-foreground text-sm mt-1">Beautiful, responsive type that scales perfectly.</p>
+              <h3 className="font-serif text-xl text-foreground">Smart Video Search</h3>
+              <p className="text-muted-foreground text-sm mt-1">AI automatically finds relevant moments across your memories.</p>
             </div>
           </motion.div>
 
-          {/* Layouts Card */}
+          {/* voice clone card */}
           <motion.div
             className="bg-secondary rounded-xl p-8 min-h-[280px] flex flex-col"
             initial={{ opacity: 0, y: 30 }}
@@ -124,15 +143,15 @@ export function FeaturesSection() {
             data-clickable
           >
             <div className="flex-1">
-              <LayoutAnimation />
+              <VoiceAnimation />
             </div>
             <div className="mt-4">
-              <h3 className="font-serif text-xl text-foreground">Layouts</h3>
-              <p className="text-muted-foreground text-sm mt-1">Flexible grids that adapt to your content.</p>
+              <h3 className="font-serif text-xl text-foreground">Your Voice, Cloned</h3>
+              <p className="text-muted-foreground text-sm mt-1">Realistic voice simulation brings your memories to life.</p>
             </div>
           </motion.div>
 
-          {/* Speed Card */}
+          {/* context enrichment card */}
           <motion.div
             className="bg-secondary rounded-xl p-8 min-h-[280px] flex flex-col"
             initial={{ opacity: 0, y: 30 }}
@@ -144,11 +163,11 @@ export function FeaturesSection() {
             data-clickable
           >
             <div className="flex-1">
-              <SpeedIndicator />
+              <MemoryAnimation />
             </div>
             <div className="mt-4">
-              <h3 className="font-serif text-xl text-foreground">Speed</h3>
-              <p className="text-muted-foreground text-sm mt-1">Blazing fast pages that keep visitors engaged.</p>
+              <h3 className="font-serif text-xl text-foreground">Rich Context</h3>
+              <p className="text-muted-foreground text-sm mt-1">Add people, places, and emotions to every memory.</p>
             </div>
           </motion.div>
         </div>
