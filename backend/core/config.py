@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     CHROMA_TENANT: str = ""
     CHROMA_DATABASE: str = ""
 
+    # mem0 (external memory store)
+    MEM0_API_KEY: str = ""
+    MEM0_USER_ID: str = "local_user"
+    MEM0_API_URL: str | None = None
+
 
     @field_validator("ALLOWED_ORIGINS")
     @classmethod

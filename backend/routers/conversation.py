@@ -1,26 +1,27 @@
-from http import HTTPStatus
-from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import Optional, List, Any, Dict
 import base64
 import json
 import re
+from http import HTTPStatus
+from typing import Any, Dict, List, Optional
 
-from ..core.models import TwelveLabsModel
+from fastapi import APIRouter
+from pydantic import BaseModel
+
 from ..core.config import settings
-from ..services.llm_service import get_llm_service
-from ..services.gemini_service import get_gemini_service
+from ..core.models import TwelveLabsModel
 from ..services.elevenlabs_service import get_elevenlabs_service
+from ..services.gemini_service import get_gemini_service
+from ..services.llm_service import get_llm_service
+from ..services.mem0_service import get_mem0_service
 
-router = APIRouter(
-    prefix="/conversation",
-    tags=["conversation-endpoint"]
-)
+router = APIRouter(prefix="/conversation", tags=["conversation-endpoint"])
+
 
 class QueryMemoryRequest(BaseModel):
     user_prompt: str
     indexed_asset_id: str  # From Next.js after DB query
     analysis_text: str  # From Next.js after DB query
+
 
 class QueryMemoryResponse(BaseModel):
     success: bool
@@ -72,11 +73,12 @@ def _parse_questions(raw_text: str) -> List[str]:
     lines = [line.strip("- ") for line in cleaned.splitlines()]
     return [line for line in lines if line and line not in {"[", "]"}]
 
+
 @router.post("/generate-response", response_model=QueryMemoryResponse)
 async def generate_response(request: QueryMemoryRequest):
     """
     Generate AI response with narrative and audio for a matched video.
-    
+
     This endpoint:
     1. Receives indexed_asset_id and analysis_text from Next.js
     2. Gets video URL from Twelve Labs
@@ -86,38 +88,61 @@ async def generate_response(request: QueryMemoryRequest):
     """
     try:
         print(f"🤖 Generating response for: {request.user_prompt[:50]}...")
-        
+
         # Step 1: Get video URL from Twelve Labs
         print(f"📹 Fetching video URL for indexed_asset_id: {request.indexed_asset_id}")
         client = TwelveLabsModel.get_twelve_labs_client()
-        
+
         indexed_asset = client.indexes.indexed_assets.retrieve(
             settings.TWELVE_LABS_INDEX_ID,
             request.indexed_asset_id,
         )
-        
+
         if not indexed_asset or not indexed_asset.hls:
             return QueryMemoryResponse(
                 success=False,
                 message="Video URL not available",
             )
-        
+
         video_url = indexed_asset.hls.video_url
         print(f"✅ Video URL retrieved: {video_url}")
-        
+
         # Step 2: Generate first-person narrative using LLM
         print("🤖 Generating AI narrative...")
         llm_service = get_llm_service()
+        mem_client = get_mem0_service()
+
+        # Assume the search result has a `memory` attribute, then log it (direct access as requested)
+        memory_context = (
+            mem_client.search(
+                request.user_prompt,
+                version="v2",
+                filters={"user_id": settings.MEM0_USER_ID},
+                limit=5,
+            )
+        )
+
+        
+        print(memory_context["results"])
+        newMemoryContextList = [s["memory"] + "\n" for s in memory_context["results"]]
+        print(
+            f"🧠 memory_context (len={len(newMemoryContextList)}): {newMemoryContextList[:500]}{'...' if len(newMemoryContextList) > 500 else ''}"
+        )
 
         narrative = await llm_service.generate_response(
             prompt=request.user_prompt,
-            context=request.analysis_text,
-            system_instruction="Talk as if you were speaking in first person about your own memories and experiences. In your response, there will a be a bunch of keywords and metadata, " \
-            "shape your response around those keywords and metadata that are in the analysis text."
+            context=request.analysis_text + "\n" + "".join(newMemoryContextList),
+            system_instruction="Talk as if you were speaking in first person about your own memories and experiences. In your response, there will a be a bunch of keywords and metadata, "
+            "shape your response around those keywords and metadata that are in the analysis text.",
+        )
+
+        mem_client.add(
+            messages=[{"role": "user", "content": f"{narrative}"}],
+            user_id=settings.MEM0_USER_ID,
         )
 
         print(f"✅ Generated narrative ({len(narrative)} chars)")
-        
+
         # Step 3: Generate audio with alignment using ElevenLabs
         print("🎤 Generating audio with word-level alignment...")
         tts_service = get_elevenlabs_service()
@@ -140,7 +165,7 @@ async def generate_response(request: QueryMemoryRequest):
             narrative=narrative,
             alignment=alignment,
         )
-        
+
     except Exception as e:
         print(f"❌ Error in generate_response: {str(e)}")
         return QueryMemoryResponse(
@@ -183,4 +208,3 @@ async def suggest_questions(request: SuggestedQuestionsRequest):
     except Exception as e:
         print(f"❌ Error generating suggested questions: {str(e)}")
         return SuggestedQuestionsResponse(questions=[])
-
