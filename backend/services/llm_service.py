@@ -1,8 +1,10 @@
-from typing import Any, Optional, Awaitable
-from core.config import settings
+from typing import Any, Awaitable, Optional
 
 from ibm_watsonx_ai.foundation_models.schema import TextChatParameters
 from langchain_ibm import ChatWatsonx
+
+from core.config import settings
+
 
 class LLMService:
     """Wrapper around Watsonx `ChatWatsonx` that follows the project's
@@ -22,7 +24,6 @@ class LLMService:
             raise ValueError("WATSONX_PROJECT_ID is not set in environment variables")
 
         # basic sanitization of project id
-
         self.model_id = model_id or self.DEFAULT_MODEL_ID
         # prefer explicit setting in Settings if present
         self.url = getattr(settings, "WATSONX_URL", None) or url or self.DEFAULT_URL
@@ -56,26 +57,19 @@ class LLMService:
             temperature=temperature,
             max_completion_tokens=max_completion_tokens,
         )
+        client = ChatWatsonx(
+            model_id=self.model_id,
+            url=self.url,
+            project_id=self.project_id,
+            params=params,
+            apikey=self.apikey,
+        )
 
-        try:
-            # ephemeral client with call-specific params
-            client = ChatWatsonx(
-                model_id=self.model_id,
-                url=self.url,
-                project_id=self.project_id,
-                params=params,
-                apikey=self.apikey,
-            )
+        messages = [("system", system_prompt)]
+        if user_prompt:
+            messages.append(("user", user_prompt))
 
-            messages = [("system", system_prompt)]
-            if user_prompt:
-                messages.append(("user", user_prompt))
-
-            return client.ainvoke(messages)
-
-        except Exception as exc:  # keep error visible for debugging
-            print(f"❌ LLMService.chat error: {exc}")
-            raise
+        return client.ainvoke(messages)
 
     def generate_response(
         self,
@@ -177,12 +171,15 @@ def get_llm_service() -> LLMService:
 if __name__ == "__main__":
     # simple demo so module can be executed from project root
     import asyncio
+
     from dotenv import load_dotenv
 
     load_dotenv()
 
     svc = get_llm_service()
-    system_prompt = "You are a helpful assistant that provides information about the weather."
+    system_prompt = (
+        "You are a helpful assistant that provides information about the weather."
+    )
     user_prompt = "What's the weather like in New York today?"
 
     resp = asyncio.run(svc.chat(system_prompt, user_prompt))
