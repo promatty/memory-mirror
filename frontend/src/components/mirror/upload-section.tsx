@@ -222,7 +222,7 @@ export function UploadSection({ onUploadSuccess }: UploadSectionProps) {
                 name="people"
                 value={metadata.people}
                 className="border border-border bg-background text-foreground p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="People (comma separated)"
+                placeholder="People"
                 onChange={handleChange}
                 disabled={uploadVideoMutation.isPending}
               />
@@ -238,7 +238,7 @@ export function UploadSection({ onUploadSuccess }: UploadSectionProps) {
                 name="tags"
                 value={metadata.tags}
                 className="border border-border bg-background text-foreground p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="Tags (comma separated)"
+                placeholder="Tags"
                 onChange={handleChange}
                 disabled={uploadVideoMutation.isPending}
               />
