@@ -12,4 +12,9 @@ dependencies = [
     "twelvelabs>=1.1.0",
     "uvicorn>=0.38.0",
     "elevenlabs>=1.0.0",
+    "ibm-watsonx-ai>=1.5.2",
+    "langchain-ibm>=1.0.4",
+    "langchain-classic>=1.0.1",
+    "langchain-ollama>=1.0.1",
+    "requests>=2.32.5",
 ]
