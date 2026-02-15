@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Mic, Send } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Mic, Send, Square } from "lucide-react";
 import { AudioWaveform } from "./audio-waveform";
 import { VideoPlayer } from "./video-player";
 import { Captions } from "./captions";
@@ -15,14 +15,14 @@ export function MirrorInterface() {
 	const [activeTab, setActiveTab] = useState<"video" | "additional">("video");
 	const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
 
-	const handleSpeechResult = (text: string) => {
+	const handleSpeechResult = useCallback((text: string) => {
 		if (text) {
 			setInputText((prev) => {
 				const prefix = prev.trim() ? `${prev} ` : "";
 				return prefix + text;
 			});
 		}
-	};
+	}, []);
 
 	const { isListening, toggleListening, interimTranscript } =
 		useSpeechRecognition({
@@ -48,9 +48,9 @@ export function MirrorInterface() {
 		}
 	};
 
-	// Calculate display value for textarea
-	// If listening, we show current committed text + interim
-	// We add a space if there's existing text and interim text
+	// calculate display value for textarea
+	// if listening, we show current committed text + interim
+	// we add a space if there's existing text and interim text
 	const displayValue = isListening
 		? `${inputText}${inputText && interimTranscript ? " " : ""}${interimTranscript}`
 		: inputText;
@@ -127,7 +127,11 @@ export function MirrorInterface() {
 							style={{ height: "44px" }}
 							aria-label="Record voice message"
 						>
-							<Mic className="w-5 h-5" />
+							{isListening ? (
+								<Square className="w-5 h-5 fill-current" />
+							) : (
+								<Mic className="w-5 h-5" />
+							)}
 						</button>
 
 						{/* text input */}

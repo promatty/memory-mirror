@@ -56,6 +56,17 @@ export function useSpeechRecognition({
 	const [isSupported, setIsSupported] = useState(false);
 
 	const recognitionRef = useRef<SpeechRecognition | null>(null);
+	// issues occur with microphone always recording even when button is turned off. use refs for callbacks to prevent re-initialization of effect
+	const onResultRef = useRef(onResult);
+	const onEndRef = useRef(onEnd);
+	const onErrorRef = useRef(onError);
+
+	// update refs when props change
+	useEffect(() => {
+		onResultRef.current = onResult;
+		onEndRef.current = onEnd;
+		onErrorRef.current = onError;
+	}, [onResult, onEnd, onError]);
 
 	useEffect(() => {
 		if (typeof window !== "undefined") {
@@ -89,10 +100,10 @@ export function useSpeechRecognition({
 				setTranscript(currentTranscript);
 				setInterimTranscript(currentInterim);
 
-				if (onResult && currentTranscript) {
+				if (onResultRef.current && currentTranscript) {
 					if (finalTranscript) {
-						onResult(finalTranscript);
-						setInterimTranscript(""); // Clear interim when finalized
+						onResultRef.current(finalTranscript);
+						setInterimTranscript("");
 					}
 				}
 			};
@@ -100,12 +111,12 @@ export function useSpeechRecognition({
 			recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
 				console.error("Speech recognition error", event.error);
 				setIsListening(false);
-				if (onError) onError(event.error);
+				if (onErrorRef.current) onErrorRef.current(event.error);
 			};
 
 			recognitionRef.current.onend = () => {
 				setIsListening(false);
-				if (onEnd) onEnd();
+				if (onEndRef.current) onEndRef.current();
 			};
 		}
 
@@ -114,7 +125,7 @@ export function useSpeechRecognition({
 				recognitionRef.current.stop();
 			}
 		};
-	}, [onResult, onEnd, onError]);
+	}, []);
 
 	const startListening = useCallback(() => {
 		if (recognitionRef.current && !isListening) {
