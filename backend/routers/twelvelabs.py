@@ -9,6 +9,8 @@ from ..models.schemas import (
     SearchVideoResponse,
     UploadVideoRequest,
     UploadVideoResponse,
+    GetVideoRequest,
+    GetVideoResponse,
 )
 
 from ..core.models import TwelveLabsModel
@@ -25,6 +27,28 @@ async def health_check():
     """Simple health check endpoint"""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
+@router.post("/get-video", response_model=GetVideoResponse)
+async def get_video(request: GetVideoRequest):
+    try:
+        client = TwelveLabsModel.get_twelve_labs_client()
+
+        print("Waiting for indexing to complete.")
+
+        indexed_asset = client.indexes.indexed_assets.retrieve(
+            settings.TWELVE_LABS_INDEX_ID,
+            request.indexed_asset_id
+        )
+
+        return GetVideoResponse(
+            hlsObject=indexed_asset.hls,
+        )
+        
+    except Exception as e:
+        print(f"❌ Error analyzing video: {str(e)}")
+        return GetVideoResponse(
+            hlsObject=None,
+            error=str(e)
+        )
 
 @router.post("/upload-video", response_model=UploadVideoResponse)
 async def upload_video(request: UploadVideoRequest):
@@ -32,16 +56,16 @@ async def upload_video(request: UploadVideoRequest):
         client = TwelveLabsModel.get_twelve_labs_client()
 
         prompt = """
-        placeholder...
+            can you describe whats happening in this video?
         """
         
-        print(f"Uploading video from: {request.video_source}")
+        print(f"Uploading video from: {request.video_path}")
 
         index = client.indexes.retrieve(
             index_id=settings.TWELVE_LABS_INDEX_ID
         )
 
-        path = request.video_source
+        path = request.video_path
         path = path.lstrip("/")
         
         asset = client.assets.create(
@@ -86,8 +110,8 @@ async def upload_video(request: UploadVideoRequest):
 
         return UploadVideoResponse(
             status=HTTPStatus.OK,
-            video_id=indexed_asset.id,
-            index_id=index.id,
+            hlsObject=indexed_asset.hls,
+            indexed_asset_id=indexed_asset.id,
             analysis_text=analysis_text,
         )
         

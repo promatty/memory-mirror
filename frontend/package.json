@@ -7,10 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:studio": "drizzle-kit studio --schema ./drizzle/schema.ts",
-    "db:push": "drizzle-kit push --schema ./drizzle/schema.ts",
-    "db:migrate": "drizzle-kit migrate --schema ./drizzle/schema.ts",
-    "db:generate": "drizzle-kit generate --schema ./drizzle/schema.ts"
+    "db:studio": "drizzle-kit studio",
+    "db:push": "drizzle-kit push ",
+    "db:migrate": "drizzle-kit migrate ",
+    "db:generate": "drizzle-kit generate "
   },
   "dependencies": {
     "dotenv": "^17.3.1",
@@ -18,7 +18,8 @@
     "next": "16.1.6",
     "postgres": "^3.4.8",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-player": "^3.4.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
