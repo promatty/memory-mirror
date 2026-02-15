@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     # elevenlabs credentials
     ELEVENLABS_API_KEY: str = ""
 
+    # gemini credentials
+    GEMINI_API_KEY: str = ""
+
 
     @field_validator("ALLOWED_ORIGINS")
     @classmethod
