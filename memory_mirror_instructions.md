@@ -233,27 +233,65 @@ playback_url = video.hls.video_url
 ## Conversation Flow
 
 ```
-1. User Input (Voice/Text)
-   ↓
-2. Convert to text (if voice input)
-   ↓
-3. Query Twelve Labs Search API
-   - Semantic search on query
-   - Filter by metadata (date, people, location, mood, etc.)
-   ↓
-4. Retrieve relevant video segments
-   - Get video_id, timestamps, context
-   ↓
-5. LLM generates response
-   - Input: user query + retrieved video context + metadata
-   - Output: conversational response in first person
-   ↓
-6. ElevenLabs TTS
-   - Convert response to audio in cloned voice
-   ↓
-7. Display to user
-   - Play audio response
-   - Show relevant video clips at matching timestamps
+Frontend → Python Backend → AI Services → Twelve Labs DB → Eleven Labs
+
+1. User Input (userPrompt)
+   Example: "Show me a video of me during school"
+   Frontend → Python Backend
+
+2. Query Database
+   Python Backend → Twelve Labs DB
+   Search for videos matching user prompt
+
+3. Retrieve Results
+   Twelve Labs DB → Python Backend
+   Returns: Every Entry [{id: 123, summary: 'A boy is studying...'}, ...]
+
+4. Find Matching Entry
+   Python Backend searches for userPrompt in results
+
+   IF FOUND (id: 123):
+      ↓
+   5a. Query Specific Video
+       Python Backend → Twelve Labs DB
+       Query video where id == 123
+
+   5b. Get Video Summary
+       Twelve Labs DB → AI
+       Send: {Summary: 'A boy is studying', prompt: 'talk as if you were speaking in first person'}
+
+   5c. Retrieve Video Data
+       AI → Python Backend
+       Returns: {id: 123, video}
+
+   5d. Generate AI Response
+       Python Backend → AI
+       AI generates: newSummary: "This was during my younger school days..."
+
+   5e. Convert to Speech
+       Python Backend → Eleven Labs
+       Send: newSummary: "This was during my younger school days..."
+
+   5f. Receive Audio
+       Eleven Labs → Python Backend
+       Returns: [AUDIO]: "This was during my younger school days..."
+
+   5g. Send to Frontend
+       Python Backend → Frontend
+       Returns: {id: 123, video, audio}
+
+   IF NOT FOUND:
+      ↓
+   6. Return "None FOUND"
+      Python Backend → Frontend
+      User sees: "No matching videos found"
+
+Key Components:
+- Frontend: User interface for input/output
+- Python Backend: Orchestrates the entire flow
+- AI: Generates conversational responses in first person
+- Twelve Labs DB: Video storage, search, and retrieval
+- Eleven Labs: Text-to-speech conversion
 ```
 
 ---
