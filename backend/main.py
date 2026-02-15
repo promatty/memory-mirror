@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import test
+from .routers.twelvelabs import assets, indexes
 from .core.config import settings
 
 app = FastAPI(
@@ -21,7 +21,8 @@ app.add_middleware(
 )
 
 # uncomment when we eventually edit this routergg
-app.include_router(test.router, prefix=settings.API_PREFIX)
+app.include_router(assets.router, prefix=settings.API_PREFIX)
+app.include_router(indexes.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn
