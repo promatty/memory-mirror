@@ -18,7 +18,7 @@ interface HistoryDrawerProps {
   onClose: () => void;
   onReplayConversation: (conversation: ConversationHistoryItem) => void;
 }
-
+export const CONVERSATION_HISTORY_QUERY_KEY = "conversation-history";
 export function HistoryDrawer({
   isOpen,
   onClose,
@@ -32,7 +32,7 @@ export function HistoryDrawer({
 
   // Fetch conversation history
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["conversation-history", searchQuery, offset],
+    queryKey: [CONVERSATION_HISTORY_QUERY_KEY, searchQuery, offset],
     queryFn: async () => {
       const result = await getConversationHistory({
         limit: LIMIT,
@@ -174,7 +174,7 @@ export function HistoryDrawer({
                   <code className="px-1.5 py-0.5 bg-muted rounded text-xs">.env.local</code> file.
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Your conversations are still working - they just won't be saved for later viewing.
+                  {`Your conversations are still working - they just won't be saved for later viewing.`}
                 </p>
               </div>
             </div>

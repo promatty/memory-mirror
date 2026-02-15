@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Mic, Send, Square, History } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "./video-player";
@@ -11,10 +11,11 @@ import { useSpeechRecognition } from "../../hooks/use-speech-recognition";
 import { queryMemory } from "@/app/actions/mirror-actions";
 import type { QueryMemoryResponse } from "@/types/memory";
 import { VoiceVisualizer } from "@/components/mirror/audioVisualizer/voice-visualizer";
-import { HistoryDrawer } from "@/components/history/history-drawer";
+import { CONVERSATION_HISTORY_QUERY_KEY, HistoryDrawer } from "@/components/history/history-drawer";
 import type { ConversationHistoryItem } from "@/app/actions/conversation-actions";
 
 export function MirrorInterface() {
+  const queryClient = useQueryClient();
   const [inputText, setInputText] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [captionText, setCaptionText] = useState("");
@@ -64,6 +65,11 @@ export function MirrorInterface() {
         setCurrentAudioUrl(`data:audio/mpeg;base64,${data.audioBase64}`);
 
         toast.success("Memory found!", { id: "query-memory" });
+
+        // Invalidate conversation history query to refresh the list
+        void queryClient.invalidateQueries({
+          queryKey: [CONVERSATION_HISTORY_QUERY_KEY],
+        });
       }
     },
     onError: (error: Error) => {
@@ -102,6 +108,16 @@ export function MirrorInterface() {
     []
   );
 
+  // Reset the mirror interface to initial state
+  const resetMirrorInterface = useCallback(() => {
+    setInputText("");
+    setIsPlaying(false);
+    setCaptionText("");
+    setCurrentVideoUrl(null);
+    setCurrentAudioUrl(null);
+    setActiveTab("video");
+  }, []);
+
   // calculate display value for textarea
   // if listening, we show current committed text + interim
   // we add a space if there's existing text and interim text
@@ -125,7 +141,7 @@ export function MirrorInterface() {
 
         {/* upload and history buttons */}
         <div className="p-6 space-y-3">
-          <UploadSection />
+          <UploadSection onUploadSuccess={resetMirrorInterface} />
           <button
             onClick={() => setIsHistoryOpen(true)}
             className="w-full px-4 py-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium"
