@@ -29,3 +29,11 @@ __pycache__/
 backend/**/__pycache__/
 /backend/.venv
 apple_health_export/
+
+# Database files
+backend/dev.db
+backend/dev.db-journal
+backend/*.db
+backend/*.db-journal
+backend/prisma/*.db
+backend/prisma/*.db-journal

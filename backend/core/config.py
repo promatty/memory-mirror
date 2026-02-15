@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     ALLOWED_ORIGINS: str | List[str] = ""
     
+    # Database
+    DATABASE_URL: str = "file:./dev.db"
+    
     # twelve labs credentials
     TWELVE_LABS_API_KEY: str = ""
     TWELVE_LABS_INDEX_ID: str = ""
