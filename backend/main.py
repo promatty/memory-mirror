@@ -1,8 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
-from .routers import test
+from .routers import test, video_analysis
 from .core.config import settings
+from .core.database import db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle manager for the FastAPI app."""
+    # Startup: Connect to database
+    await db.connect()
+    yield
+    # Shutdown: Disconnect from database
+    await db.disconnect()
+
 
 app = FastAPI(
     title="memory mirror",
@@ -10,6 +23,7 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -20,8 +34,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# uncomment when we eventually edit this routergg
+# Include routers
 app.include_router(test.router, prefix=settings.API_PREFIX)
+app.include_router(video_analysis.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn
