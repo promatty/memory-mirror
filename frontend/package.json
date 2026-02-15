@@ -7,10 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:studio": "drizzle-kit studio --schema ./drizzle/schema.ts",
-    "db:push": "drizzle-kit push --schema ./drizzle/schema.ts",
-    "db:migrate": "drizzle-kit migrate --schema ./drizzle/schema.ts",
-    "db:generate": "drizzle-kit generate --schema ./drizzle/schema.ts"
+    "db:studio": "drizzle-kit studio",
+    "db:push": "drizzle-kit push ",
+    "db:migrate": "drizzle-kit migrate ",
+    "db:generate": "drizzle-kit generate "
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
@@ -61,6 +61,7 @@
     "react": "19.2.3",
     "react-day-picker": "9.8.0",
     "react-dom": "19.2.3",
+    "react-player": "^3.4.0",
     "react-hook-form": "^7.60.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.4",

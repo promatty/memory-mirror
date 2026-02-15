@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Literal, Union
 from datetime import datetime
 from fastapi import Form, Path, Query
+from twelvelabs import HlsObject
 
 class Asset(BaseModel):
     id: Optional[str] = None
@@ -11,13 +12,18 @@ class Asset(BaseModel):
     file_type: Optional[str] = None
     created_at: Optional[datetime] = None
 
+class GetVideoRequest(BaseModel):
+    indexed_asset_id: str
+
+class GetVideoResponse(BaseModel):
+    hlsObject: HlsObject
 class UploadVideoRequest(BaseModel):
-    video_source: str
+    video_path: str
 
 class UploadVideoResponse(BaseModel):
     status: str
-    video_id: str
-    index_id: str
+    hlsObject: HlsObject
+    indexed_asset_id: str
     analysis_text: str
 
 class SearchVideoRequest(BaseModel):
