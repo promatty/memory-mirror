@@ -3,7 +3,11 @@
 import { db } from "@/db";
 import { videos, conversations } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { searchVideos, queryMemoryService } from "@/services/memory-service";
+import {
+  searchVideos,
+  queryMemoryService,
+  generateSuggestedQuestions as generateSuggestedQuestionsService,
+} from "@/services/memory-service";
 import type { QueryMemoryResponse } from "@/types/memory";
 
 export interface QueryMemoryInput {
@@ -14,6 +18,44 @@ export interface QueryMemoryResult {
   success: boolean;
   data?: QueryMemoryResponse;
   error?: string;
+}
+
+type SuggestedQuestions = {
+  questions: string[];
+};
+
+export async function generateSuggestedQuestions(): Promise<SuggestedQuestions> {
+  let suggestedQuestions: SuggestedQuestions;
+  try {
+    console.log("Getting analysis text from existing videos");
+    const videoRows = await db.query.videos.findMany({
+      columns: { analysisText: true },
+      limit: 8,
+    });
+
+    const analysisTexts = videoRows
+      .map((row) => row.analysisText)
+      .filter((text) => Boolean(text));
+
+    if (!analysisTexts.length) {
+      throw new Error("No analysis text found");
+    }
+
+    const result = await generateSuggestedQuestionsService(analysisTexts);
+    suggestedQuestions = { questions: result.questions };
+  } catch (dbError) {
+    console.warn("Database query failed, using mock data:", dbError);
+    // Use mock data if database is not configured
+    suggestedQuestions = {
+      questions: [
+        "Does Justin Pham likes cats?",
+        "What kind of food does Justin Pham like?",
+        "Did Justin Pham ever play soccer?",
+      ],
+    };
+  }
+
+  return suggestedQuestions;
 }
 
 /**

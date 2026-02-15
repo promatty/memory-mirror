@@ -1,17 +1,23 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Mic, Send, Square, History } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "./video-player";
 import { Captions } from "./captions";
 import { UploadSection } from "./upload-section";
 import { useSpeechRecognition } from "../../hooks/use-speech-recognition";
-import { queryMemory } from "@/app/actions/mirror-actions";
+import {
+  queryMemory,
+  generateSuggestedQuestions,
+} from "@/app/actions/mirror-actions";
 import type { QueryMemoryResponse } from "@/types/memory";
 import { VoiceVisualizer } from "@/components/mirror/audioVisualizer/voice-visualizer";
-import { CONVERSATION_HISTORY_QUERY_KEY, HistoryDrawer } from "@/components/history/history-drawer";
+import {
+  CONVERSATION_HISTORY_QUERY_KEY,
+  HistoryDrawer,
+} from "@/components/history/history-drawer";
 import type { ConversationHistoryItem } from "@/app/actions/conversation-actions";
 
 export function MirrorInterface() {
@@ -23,6 +29,17 @@ export function MirrorInterface() {
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const suggestedQuestionsQuery = useQuery({
+    queryKey: ["suggested-questions"],
+    queryFn: async () => {
+      const result = await generateSuggestedQuestions();
+      return result.questions ?? [];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  console.log(suggestedQuestionsQuery.data);
 
   const handleSpeechResult = useCallback((text: string) => {
     if (text) {
@@ -105,7 +122,7 @@ export function MirrorInterface() {
 
       toast.success("Replaying conversation");
     },
-    []
+    [],
   );
 
   // Reset the mirror interface to initial state
@@ -135,7 +152,7 @@ export function MirrorInterface() {
         </div>
 
         {/* captions area */}
-        <div className="flex-1 p-6 border-b border-border overflow-y-auto">
+        <div className="flex-1 p-6 border-b border-border ">
           <Captions text={captionText} />
         </div>
 
@@ -155,7 +172,7 @@ export function MirrorInterface() {
       {/* main content area */}
       <div className="flex-1 flex flex-col">
         {/* video/additional tab toggle */}
-        <div className="flex items-center justify-center p-4">
+        <div className="flex items-center justify-center p-2">
           <div className="inline-flex rounded-lg border border-border bg-surface p-1">
             <button
               onClick={() => setActiveTab("video")}
@@ -192,51 +209,73 @@ export function MirrorInterface() {
 
         {/* input controls */}
         <div className="p-5 border-t border-border bg-surface">
-          <div className="max-w-4xl mx-auto flex items-center gap-4">
-            {/* speak button */}
-            <button
-              onClick={handleSpeak}
-              className={`px-6 rounded-lg border transition-all ${
-                isListening
-                  ? "bg-secondary border-secondary text-secondary-foreground"
-                  : "border-border hover:border-primary hover:text-primary"
-              }`}
-              style={{ height: "44px" }}
-              aria-label="Record voice message"
-            >
-              {isListening ? (
-                <Square className="w-5 h-5 fill-current" />
-              ) : (
-                <Mic className="w-5 h-5" />
-              )}
-            </button>
-
-            {/* text input */}
-            <div className="flex-1 relative">
-              <textarea
-                value={displayValue}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="text"
-                disabled={queryMemoryMutation.isPending}
-                className="w-full px-4 py-2.5 pr-12 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50"
-                rows={1}
-                style={{
-                  minHeight: "44px",
-                  maxHeight: "200px",
-                }}
-              />
+          <div className="max-w-4xl mx-auto">
+            <div className="flex gap-4">
+              {/* speak button */}
               <button
-                onClick={() => void handleSendMessage()}
-                disabled={
-                  (!inputText.trim() && !interimTranscript) ||
-                  queryMemoryMutation.isPending
-                }
-                className="absolute right-2 bottom-2 p-2 rounded-md text-primary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                aria-label="Send message"
+                onClick={handleSpeak}
+                className={`px-6 rounded-lg border transition-all ${
+                  isListening
+                    ? "bg-secondary border-secondary text-secondary-foreground"
+                    : "border-border hover:border-primary hover:text-primary"
+                }`}
+                style={{ height: "44px" }}
+                aria-label="Record voice message"
               >
-                <Send className="w-5 h-5" />
+                {isListening ? (
+                  <Square className="w-5 h-5 fill-current" />
+                ) : (
+                  <Mic className="w-5 h-5" />
+                )}
               </button>
+
+              {/* text input */}
+              <div className="flex flex-col w-full">
+                <div className="flex-1 relative">
+                  <textarea
+                    value={displayValue}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="text"
+                    disabled={queryMemoryMutation.isPending}
+                    className="w-full px-4 py-2.5 pr-12 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50"
+                    rows={1}
+                    style={{
+                      minHeight: "44px",
+                      maxHeight: "200px",
+                    }}
+                  />
+                  <button
+                    onClick={() => void handleSendMessage()}
+                    disabled={
+                      (!inputText.trim() && !interimTranscript) ||
+                      queryMemoryMutation.isPending
+                    }
+                    className="absolute right-2 bottom-2 p-2 rounded-md text-primary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    aria-label="Send message"
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </div>
+                {suggestedQuestionsQuery.data?.length ? (
+                  <div className="mt flex flex-wrap gap-2">
+                    {suggestedQuestionsQuery.data.map((question, index) => (
+                      <button
+                        key={`${question}-${index}`}
+                        type="button"
+                        onClick={() => setInputText(question)}
+                        className={`px-3 py-1 rounded-full border text-xs transition-all ${
+                          inputText.trim() === question
+                            ? "border-primary text-foreground bg-primary/10"
+                            : "border-border text-muted-foreground hover:text-foreground hover:border-primary/60 hover:bg-primary/5"
+                        }`}
+                      >
+                        {question}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
