@@ -196,7 +196,7 @@ function VideoVector({ point, isSelected, onSelect, onHover }: VideoVectorProps)
           document.body.style.cursor = 'default';
         }}
       >
-        <sphereGeometry args={[0.08, 12, 12]} />
+        <sphereGeometry args={[0.20, 12, 12]} />
         <meshStandardMaterial 
           color={color}
           emissive={color}
@@ -211,7 +211,7 @@ function VideoVector({ point, isSelected, onSelect, onHover }: VideoVectorProps)
       {/* Glowing ring around selected/hovered videos */}
       {(isSelected || hovered) && (
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.15, 0.18, 32]} />
+          <ringGeometry args={[0.25, 0.28, 32]} />
           <meshBasicMaterial 
             color={isSelected ? '#ffffff' : '#ff4081'}
             transparent
@@ -457,7 +457,7 @@ export function VideoCluster3D({
           position: [15, 12, 15], 
           fov: 50 
         }}
-        style={{ background: 'linear-gradient(135deg, #0c0a1a 0%, #1a0c2e 50%, #0f172a 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #000000 0%, #111111 50%, #000000 100%)' }}
         gl={{ 
           antialias: true, 
           alpha: true,
@@ -465,7 +465,7 @@ export function VideoCluster3D({
         }}
       >
         {/* Fog for depth and atmosphere */}
-        <fog attach="fog" args={['#0c0a1a', 20, 80]} />
+        <fog attach="fog" args={['#000000', 20, 80]} />
         
         <VideoCluster points={points} onPointSelect={onPointSelect} />
       </Canvas>
