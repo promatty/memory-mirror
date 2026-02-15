@@ -42,7 +42,7 @@ export function VideoPlayer({
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <div className="text-center space-y-2">
-              <div className="text-6xl mb-4">video here</div>
+              <div className="text-6xl mb-4">Video here</div>
               <p className="text-sm">Video content will appear here</p>
             </div>
           </div>

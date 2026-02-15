@@ -6,6 +6,7 @@ import { Mic, Send, Square, History } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "./video-player";
 import { TranscriptViewer, type TranscriptViewerRef } from "./transcript-viewer";
+import { MemoryInfoView } from "./memory-info-view";
 import { UploadSection } from "./upload-section";
 import { useSpeechRecognition } from "../../hooks/use-speech-recognition";
 import {
@@ -19,18 +20,22 @@ import {
   HistoryDrawer,
 } from "@/components/history/history-drawer";
 import type { ConversationHistoryItem } from "@/app/actions/conversation-actions";
-
+const TABS = {
+  VIDEO: "Video",
+  ADDITIONAL: "Additional",
+} as const
 export function MirrorInterface() {
   const queryClient = useQueryClient();
   const transcriptViewerRef = useRef<TranscriptViewerRef>(null);
   const [inputText, setInputText] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [captionText, setCaptionText] = useState("");
-  const [activeTab, setActiveTab] = useState<"video" | "additional">("video");
+  const [activeTab, setActiveTab] = useState<typeof TABS[keyof typeof TABS]>(TABS.VIDEO);
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [currentAlignment, setCurrentAlignment] = useState<AlignmentData | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [currentUserPrompt, setCurrentUserPrompt] = useState<string>("");
 
   const suggestedQuestionsQuery = useQuery({
     queryKey: ["suggested-questions"],
@@ -41,7 +46,6 @@ export function MirrorInterface() {
     staleTime: 1000 * 60 * 5,
   });
 
-  console.log(suggestedQuestionsQuery.data);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   const handleSpeechResult = useCallback((text: string) => {
@@ -76,7 +80,7 @@ export function MirrorInterface() {
     onMutate: () => {
       toast.loading("Searching your memories...", { id: "query-memory" });
     },
-    onSuccess: (data: QueryMemoryResponse) => {
+    onSuccess: (data: QueryMemoryResponse, variables: string) => {
       if (data.videoUrl && data.audioBase64 && data.narrative) {
         // Success: Update UI with video, audio, narrative, and alignment
         setCurrentVideoUrl(data.videoUrl);
@@ -84,6 +88,7 @@ export function MirrorInterface() {
         setIsPlaying(true);
         setCurrentAudioUrl(`data:audio/mpeg;base64,${data.audioBase64}`);
         setCurrentAlignment(data.alignment || null);
+        setCurrentUserPrompt(variables); // Save the user's question
 
         toast.success("Memory found!", { id: "query-memory" });
 
@@ -123,6 +128,7 @@ export function MirrorInterface() {
       setCaptionText(conversation.narrative);
       setCurrentAudioUrl(`data:audio/mpeg;base64,${conversation.audioBase64}`);
       setCurrentAlignment(conversation.alignment || null);
+      setCurrentUserPrompt(conversation.userPrompt);
       setIsPlaying(true);
 
       toast.success("Replaying conversation");
@@ -138,7 +144,8 @@ export function MirrorInterface() {
     setCurrentVideoUrl(null);
     setCurrentAudioUrl(null);
     setCurrentAlignment(null);
-    setActiveTab("video");
+    setCurrentUserPrompt("");
+    setActiveTab(TABS.VIDEO);
   }, []);
 
   // calculate display value for textarea
@@ -189,36 +196,43 @@ export function MirrorInterface() {
         <div className="flex items-center justify-center p-2">
           <div className="inline-flex rounded-lg border border-border bg-surface p-1">
             <button
-              onClick={() => setActiveTab("video")}
+              onClick={() => setActiveTab("Video")}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "video"
+                activeTab === "Video"
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              video
+              Video
             </button>
             <span className="text-muted-foreground px-2 py-2">/</span>
             <button
-              onClick={() => setActiveTab("additional")}
+              onClick={() => setActiveTab("Additional")}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "additional"
+                activeTab === "Additional"
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              additional
+              Additional
             </button>
           </div>
         </div>
 
-        {/* video display area */}
+        {/* content display area - video or memory info */}
         <div className="flex-1 p-8 overflow-y-auto">
-          <VideoPlayer
-            videoUrl={currentVideoUrl}
-            isPlaying={isPlaying}
-            onPlayStateChange={setIsPlaying}
-          />
+          {activeTab === TABS.VIDEO ? (
+            <VideoPlayer
+              videoUrl={currentVideoUrl}
+              isPlaying={isPlaying}
+              onPlayStateChange={setIsPlaying}
+            />
+          ) : (
+            <MemoryInfoView
+              narrative={captionText}
+              userPrompt={currentUserPrompt}
+            />
+          )}
         </div>
 
         {/* input controls */}
