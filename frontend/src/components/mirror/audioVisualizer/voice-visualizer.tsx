@@ -16,13 +16,13 @@ const VisualizerScene = dynamic(
 );
 
 interface VoiceVisualizerProps {
-  /** Path or URL to an audio file to load */
-  src?: string;
+  /** Audio element to visualize (instead of creating a new one) */
+  audioElement?: HTMLAudioElement | null;
   /** Optional CSS class for the container */
   className?: string;
 }
 
-export function VoiceVisualizer({ src, className }: VoiceVisualizerProps) {
+export function VoiceVisualizer({ audioElement, className }: VoiceVisualizerProps) {
   const {
     isPlaying,
     frequencyData,
@@ -31,14 +31,14 @@ export function VoiceVisualizer({ src, className }: VoiceVisualizerProps) {
     midFrequency,
     trebleFrequency,
     fileName,
-    loadAudioFromUrl,
+    connectToAudioElement,
     togglePlayPause,
   } = useAudioAnalyzer();
 
   useEffect(() => {
-    if (!src) return;
-    loadAudioFromUrl(src);
-  }, [src, loadAudioFromUrl]);
+    if (!audioElement) return;
+    connectToAudioElement(audioElement);
+  }, [audioElement, connectToAudioElement]);
 
   return (
     <div className={`relative w-full h-full min-h-0 ${className ?? ""}`}>

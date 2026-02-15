@@ -1,7 +1,7 @@
 from http import HTTPStatus
 from fastapi import APIRouter
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 import base64
 import json
 import re
@@ -27,6 +27,7 @@ class QueryMemoryResponse(BaseModel):
     video_url: Optional[str] = None
     audio_base64: Optional[str] = None
     narrative: Optional[str] = None
+    alignment: Optional[Dict[str, Any]] = None  # Word-level timing data
     message: Optional[str] = None
     error: Optional[str] = None
 
@@ -117,30 +118,27 @@ async def generate_response(request: QueryMemoryRequest):
 
         print(f"✅ Generated narrative ({len(narrative)} chars)")
         
-        # Step 3: Generate audio using ElevenLabs
-        print("🎤 Generating audio...")
+        # Step 3: Generate audio with alignment using ElevenLabs
+        print("🎤 Generating audio with word-level alignment...")
         tts_service = get_elevenlabs_service()
-        
-        
-        audio_path = tts_service.text_to_speech(
+
+        # Use the new method that returns alignment data
+        tts_result = tts_service.text_to_speech_with_alignment(
             text=narrative,
             voice="wlUCbyBjJciHgW8SIZWH",  # Justin voice
-            output_filename=f"response_{request.indexed_asset_id[:8]}"
         )
-        
-        # Read audio file and convert to base64
-        with open(audio_path, "rb") as audio_file:
-            audio_bytes = audio_file.read()
-            audio_base64 = base64.b64encode(audio_bytes).decode("utf-8")
-        
-        print(f"✅ Generated audio ({len(audio_base64)} chars base64)")
-        
+
+        audio_base64 = tts_result["audio_base64"]
+        alignment = tts_result["alignment"]
+        print(f"✅ Generated audio with alignment ({len(audio_base64)} chars base64)")
+
         # Step 4: Return success response
         return QueryMemoryResponse(
             success=True,
             video_url=video_url,
             audio_base64=audio_base64,
             narrative=narrative,
+            alignment=alignment,
         )
         
     except Exception as e:

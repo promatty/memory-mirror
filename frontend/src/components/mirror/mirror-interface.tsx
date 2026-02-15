@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Mic, Send, Square, History } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "./video-player";
-import { Captions } from "./captions";
+import { TranscriptViewer, type TranscriptViewerRef } from "./transcript-viewer";
 import { UploadSection } from "./upload-section";
 import { useSpeechRecognition } from "../../hooks/use-speech-recognition";
 import {
   queryMemory,
   generateSuggestedQuestions,
 } from "@/app/actions/mirror-actions";
-import type { QueryMemoryResponse } from "@/types/memory";
+import type { QueryMemoryResponse, AlignmentData } from "@/types/memory";
 import { VoiceVisualizer } from "@/components/mirror/audioVisualizer/voice-visualizer";
 import {
   CONVERSATION_HISTORY_QUERY_KEY,
@@ -22,12 +22,14 @@ import type { ConversationHistoryItem } from "@/app/actions/conversation-actions
 
 export function MirrorInterface() {
   const queryClient = useQueryClient();
+  const transcriptViewerRef = useRef<TranscriptViewerRef>(null);
   const [inputText, setInputText] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [captionText, setCaptionText] = useState("");
   const [activeTab, setActiveTab] = useState<"video" | "additional">("video");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
+  const [currentAlignment, setCurrentAlignment] = useState<AlignmentData | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const suggestedQuestionsQuery = useQuery({
@@ -40,6 +42,7 @@ export function MirrorInterface() {
   });
 
   console.log(suggestedQuestionsQuery.data);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
   const handleSpeechResult = useCallback((text: string) => {
     if (text) {
@@ -75,11 +78,12 @@ export function MirrorInterface() {
     },
     onSuccess: (data: QueryMemoryResponse) => {
       if (data.videoUrl && data.audioBase64 && data.narrative) {
-        // Success: Update UI with video, audio, and narrative
+        // Success: Update UI with video, audio, narrative, and alignment
         setCurrentVideoUrl(data.videoUrl);
         setCaptionText(data.narrative);
         setIsPlaying(true);
         setCurrentAudioUrl(`data:audio/mpeg;base64,${data.audioBase64}`);
+        setCurrentAlignment(data.alignment || null);
 
         toast.success("Memory found!", { id: "query-memory" });
 
@@ -118,6 +122,7 @@ export function MirrorInterface() {
       setCurrentVideoUrl(conversation.videoUrl || null);
       setCaptionText(conversation.narrative);
       setCurrentAudioUrl(`data:audio/mpeg;base64,${conversation.audioBase64}`);
+      setCurrentAlignment(conversation.alignment || null);
       setIsPlaying(true);
 
       toast.success("Replaying conversation");
@@ -132,6 +137,7 @@ export function MirrorInterface() {
     setCaptionText("");
     setCurrentVideoUrl(null);
     setCurrentAudioUrl(null);
+    setCurrentAlignment(null);
     setActiveTab("video");
   }, []);
 
@@ -148,12 +154,20 @@ export function MirrorInterface() {
       <div className="w-1/3 border-r border-border bg-surface flex flex-col">
         {/* audio waveform visualization */}
         <div className="h-1/2">
-          <VoiceVisualizer src={currentAudioUrl ?? undefined} />
+          <VoiceVisualizer audioElement={audioElement} />
         </div>
 
-        {/* captions area */}
-        <div className="flex-1 p-6 border-b border-border ">
-          <Captions text={captionText} />
+        {/* transcript area */}
+        <div className="flex-1 p-6 border-b border-border overflow-y-auto">
+          <TranscriptViewer
+            ref={transcriptViewerRef}
+            text={captionText}
+            audioSrc={currentAudioUrl}
+            alignment={currentAlignment}
+            isPlaying={isPlaying}
+            onPlayStateChange={setIsPlaying}
+            onAudioElementReady={setAudioElement}
+          />
         </div>
 
         {/* upload and history buttons */}

@@ -1,4 +1,4 @@
-import { pgTable, unique, integer, varchar, index, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, unique, integer, varchar, index, text, timestamp, jsonb } from "drizzle-orm/pg-core";
 
 export const videos = pgTable(
   "videos",
@@ -36,6 +36,7 @@ export const conversations = pgTable(
     videoId: varchar("video_id", { length: 255 }).notNull(),
     narrative: text().notNull(),
     audioBase64: text("audio_base64").notNull(),
+    alignment: jsonb("alignment"), // Word-level timing data from ElevenLabs
     thumbnailUrl: varchar("thumbnail_url", { length: 2048 }),
     videoUrl: varchar("video_url", { length: 2048 }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

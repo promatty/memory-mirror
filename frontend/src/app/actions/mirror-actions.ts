@@ -143,6 +143,7 @@ export async function queryMemory(
           videoId,
           narrative: result.narrative,
           audioBase64: result.audioBase64,
+          alignment: result.alignment || null,
           thumbnailUrl,
           videoUrl: result.videoUrl,
         });

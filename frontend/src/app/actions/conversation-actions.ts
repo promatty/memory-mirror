@@ -10,6 +10,7 @@ export interface ConversationHistoryItem {
   videoId: string;
   narrative: string;
   audioBase64: string;
+  alignment?: any; // Word-level timing data from ElevenLabs
   thumbnailUrl: string | null;
   videoUrl: string | null;
   createdAt: Date;

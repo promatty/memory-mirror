@@ -1,4 +1,4 @@
-import type { QueryMemoryResponse } from "@/types/memory";
+import type { AlignmentData, QueryMemoryResponse } from "@/types/memory";
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
@@ -36,6 +36,7 @@ interface GenerateResponseResponse {
   video_url?: string;
   audio_base64?: string;
   narrative?: string;
+  alignment?: AlignmentData; // Word-level timing data from ElevenLabs
   message?: string;
   error?: string;
 }
@@ -167,17 +168,16 @@ export const queryMemoryService = async ({
         message: responseData.message || "Failed to generate response",
       };
     }
-
     return {
       success: true,
       videoUrl: responseData.video_url,
       audioBase64: responseData.audio_base64,
       narrative: responseData.narrative,
+      alignment: responseData.alignment,
     };
   } catch (error) {
     console.error("Error in queryMemoryService:", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
 
     return {
       success: false,

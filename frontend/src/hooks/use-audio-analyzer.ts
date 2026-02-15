@@ -133,37 +133,56 @@ export function useAudioAnalyzer() {
     cancelAnimationFrame(animationFrameRef.current);
   }, []);
 
-  const connectAndPlay = useCallback(
-    (audio: HTMLAudioElement, name: string) => {
+  const connectToAudioElement = useCallback(
+    (audio: HTMLAudioElement, name: string = "Audio") => {
       initAudio();
       stopCurrent();
 
       audioElementRef.current = audio;
 
-      audio.addEventListener(
-        "canplaythrough",
-        () => {
-          if (!audioContextRef.current || !analyserRef.current) return;
+      const setupAudioContext = () => {
+        if (!audioContextRef.current || !analyserRef.current) return;
 
-          if (audioContextRef.current.state === "suspended") {
-            audioContextRef.current.resume();
-          }
+        if (audioContextRef.current.state === "suspended") {
+          audioContextRef.current.resume();
+        }
 
+        // Check if audio element already has a source node
+        // (to avoid "AudioNode is already connected" error)
+        try {
           sourceRef.current =
             audioContextRef.current.createMediaElementSource(audio);
           sourceRef.current.connect(analyserRef.current);
           analyserRef.current.connect(audioContextRef.current.destination);
+        } catch (error) {
+          // Audio element already connected, just update state
+          console.log("Audio element already connected to context");
+        }
 
-          audio.play();
-          setState((prev) => ({
-            ...prev,
-            isPlaying: true,
-            fileName: name,
-          }));
-          updateFrequencyData();
-        },
-        { once: true },
-      );
+        setState((prev) => ({
+          ...prev,
+          fileName: name,
+        }));
+        updateFrequencyData();
+      };
+
+      // If audio is already loaded, setup immediately
+      if (audio.readyState >= 2) {
+        setupAudioContext();
+      } else {
+        audio.addEventListener("canplaythrough", setupAudioContext, { once: true });
+      }
+
+      // Sync playing state with audio element
+      audio.addEventListener("play", () => {
+        setState((prev) => ({ ...prev, isPlaying: true }));
+        updateFrequencyData();
+      });
+
+      audio.addEventListener("pause", () => {
+        setState((prev) => ({ ...prev, isPlaying: false }));
+        cancelAnimationFrame(animationFrameRef.current);
+      });
 
       audio.addEventListener("ended", () => {
         setState((prev) => ({ ...prev, isPlaying: false }));
@@ -171,6 +190,24 @@ export function useAudioAnalyzer() {
       });
     },
     [initAudio, stopCurrent, updateFrequencyData],
+  );
+
+  const connectAndPlay = useCallback(
+    (audio: HTMLAudioElement, name: string) => {
+      connectToAudioElement(audio, name);
+
+      // Auto-play after connection
+      const playWhenReady = () => {
+        audio.play();
+      };
+
+      if (audio.readyState >= 2) {
+        playWhenReady();
+      } else {
+        audio.addEventListener("canplaythrough", playWhenReady, { once: true });
+      }
+    },
+    [connectToAudioElement],
   );
 
   const loadAudioFile = useCallback(
@@ -213,6 +250,7 @@ export function useAudioAnalyzer() {
     ...state,
     loadAudioFile,
     loadAudioFromUrl,
+    connectToAudioElement,
     togglePlayPause,
   };
 }
