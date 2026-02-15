@@ -25,8 +25,6 @@ When someone wants to get to know you (or yourself) better, they can talk to you
 | **LLM Orchestration**   | Claude API or GPT-4                | Generate conversational responses using retrieved context             |
 | **Frontend**            | Your choice (React, Next.js, etc.) | User interface                                                        |
 
-**Note:** We're NOT using ChromaDB or VideoDB - Twelve Labs handles all video intelligence and storage needs.
-
 ---
 
 ## Understanding Embeddings in Memory Mirror
@@ -435,12 +433,9 @@ playback_url = video.hls.video_url
 
 ## Important Notes
 
-### Why We're NOT Using ChromaDB
-
 - **Twelve Labs stores embeddings internally** - you never see or manage them directly
 - **Twelve Labs provides semantic search with metadata filtering** - no need for external vector database
 - **Search API handles everything**: converts queries to embeddings, compares against stored embeddings, filters by metadata
-- **Adding ChromaDB adds unnecessary complexity** for a hackathon timeline
 - **Keep it simple**: One tool (Twelve Labs) for all video intelligence needs
 
 **Important**: While the Twelve Labs API has an endpoint to create custom embeddings (`embed.v_2.create`), you DO NOT need to use this for basic video search. The embeddings are automatically created and stored when you upload videos to an index. The custom embeddings endpoint is only for advanced use cases like:
