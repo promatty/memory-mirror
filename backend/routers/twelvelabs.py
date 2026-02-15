@@ -183,6 +183,7 @@ async def upload_video(
 
 @router.post("/search_video", response_model=SearchVideoResponse)
 async def search_video(request: SearchVideoRequest):
+    start_time = time.perf_counter()
     try:
         # Validate that at least one query parameter is provided
         if not request.query_text and not request.image_url and not request.image_path:
@@ -235,6 +236,8 @@ async def search_video(request: SearchVideoRequest):
 
         top_item = next(iter(search_pager), None)
         if not top_item:
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            print(f"⏱️ Twelve Labs search completed in {elapsed_ms:.2f} ms (no results)")
             return SearchVideoResponse(status=HTTPStatus.OK, result=None)
 
         result = SearchResult(
@@ -249,6 +252,8 @@ async def search_video(request: SearchVideoRequest):
             user_metadata=getattr(top_item, "user_metadata", None),
         )
 
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        print(f"⏱️ Twelve Labs search completed in {elapsed_ms:.2f} ms")
         return SearchVideoResponse(
             status=HTTPStatus.OK,
             result=result,

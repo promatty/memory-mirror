@@ -13,7 +13,7 @@ class LLMService:
     """
 
     DEFAULT_URL = "https://ca-tor.ml.cloud.ibm.com"
-    DEFAULT_MODEL_ID = "meta-llama/llama-3-3-70b-instruct"
+    DEFAULT_MODEL_ID = "mistralai/mistral-small-3-1-24b-instruct-2503"
 
     def __init__(self, model_id: str | None = None, url: Optional[str] = None):
         if not settings.WATSONX_API_KEY:

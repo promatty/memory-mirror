@@ -1,4 +1,6 @@
+import time
 from pathlib import Path
+from typing import Iterable
 from elevenlabs import ElevenLabs
 from ..core.config import settings
 
@@ -15,7 +17,7 @@ class ElevenLabsService:
         self,
         text: str,
         voice: str = "21m00Tcm4TlvDq8ikWAM",  # Default voice ID (Rachel)
-        model: str = "eleven_multilingual_v2",
+        model: str = "eleven_flash_v2_5",
         output_filename: str | None = None
     ) -> Path:
         """
@@ -24,13 +26,14 @@ class ElevenLabsService:
         Args:
             text: The text to convert to speech
             voice: Voice name to use (default: "Rachel")
-            model: Model to use (default: "eleven_multilingual_v2")
+            model: Model to use (default: "eleven_flash_v2_5")
             output_filename: Optional custom filename (without extension)
         
         Returns:
             Path to the generated audio file
         """
         try:
+            start_time = time.perf_counter()
             # Generate audio
             audio_generator = self.client.text_to_speech.convert(
                 voice_id=voice,
@@ -53,12 +56,48 @@ class ElevenLabsService:
                 for chunk in audio_generator:
                     f.write(chunk)
             
-            print(f"Audio generated successfully: {output_path}")
+            elapsed_ms = (time.perf_counter() - start_time) * 1000
+            print(f"Audio generated successfully in {elapsed_ms:.2f} ms: {output_path}")
             return output_path
             
         except Exception as e:
             print(f"Error generating speech: {str(e)}")
             raise
+
+    def text_to_speech_stream(
+        self,
+        text: str,
+        voice: str = "21m00Tcm4TlvDq8ikWAM",
+        model: str = "eleven_flash_v2_5",
+    ) -> Iterable[bytes]:
+        """
+        Stream TTS audio chunks without writing to disk.
+
+        Args:
+            text: The text to convert to speech
+            voice: Voice ID to use
+            model: Model to use
+
+        Returns:
+            Iterable of audio byte chunks
+        """
+        start_time = time.perf_counter()
+        audio_generator = self.client.text_to_speech.convert(
+            voice_id=voice,
+            text=text,
+            model_id=model,
+            output_format="mp3_44100_128",
+        )
+
+        def stream() -> Iterable[bytes]:
+            try:
+                for chunk in audio_generator:
+                    yield chunk
+            finally:
+                elapsed_ms = (time.perf_counter() - start_time) * 1000
+                print(f"Audio streamed successfully in {elapsed_ms:.2f} ms")
+
+        return stream()
     
     def list_voices(self) -> list:
         """

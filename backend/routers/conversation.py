@@ -76,6 +76,7 @@ async def generate_response(request: QueryMemoryRequest):
         print("🎤 Generating audio...")
         tts_service = get_elevenlabs_service()
         
+        
         audio_path = tts_service.text_to_speech(
             text=narrative,
             voice="21m00Tcm4TlvDq8ikWAM",  # Rachel voice
