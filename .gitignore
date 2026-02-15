@@ -29,3 +29,6 @@ __pycache__/
 backend/**/__pycache__/
 /backend/.venv
 apple_health_export/
+backend/output/*
+backend/examples/*
+backend/tests/*

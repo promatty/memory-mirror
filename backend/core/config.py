@@ -8,10 +8,13 @@ class Settings(BaseSettings):
     API_PREFIX: str = "/api"
     DEBUG: bool = True
     ALLOWED_ORIGINS: str | List[str] = ""
-    
+
     # twelve labs credentials
     TWELVE_LABS_API_KEY: str = ""
     TWELVE_LABS_INDEX_ID: str = ""
+
+    # elevenlabs credentials
+    ELEVENLABS_API_KEY: str = ""
 
 
     @field_validator("ALLOWED_ORIGINS")
