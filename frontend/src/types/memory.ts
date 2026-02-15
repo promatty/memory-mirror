@@ -55,3 +55,19 @@ export interface VideoData {
   analysisText: string;
 }
 
+// 3D Visualization types
+export interface Point3D {
+  x: number;
+  y: number;
+  z: number;
+  indexed_asset_id: string;
+  keywords: string[];
+  metadata?: Record<string, any>;
+}
+
+export interface VideoClusterData {
+  points: Point3D[];
+  method: string;
+  total_videos: number;
+}
+

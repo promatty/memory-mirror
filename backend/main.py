@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import twelvelabs, conversation, mem0
+from .routers import twelvelabs, conversation, mem0, embeddings
 from .core.config import settings
 
 app = FastAPI(
@@ -24,6 +24,7 @@ app.add_middleware(
 app.include_router(twelvelabs.router, prefix=settings.API_PREFIX)
 app.include_router(conversation.router, prefix=settings.API_PREFIX)
 app.include_router(mem0.router, prefix=settings.API_PREFIX)
+app.include_router(embeddings.router, prefix=settings.API_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn

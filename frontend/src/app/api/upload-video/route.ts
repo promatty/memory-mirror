@@ -30,11 +30,13 @@ export async function POST(request: Request) {
   const existingVideo = await getVideoIfExists(data.indexed_asset_id);
 
   if (!existingVideo) {
-    const insertResult = await insertVideoIntoDbIfNotExists(
-      data.analysis_text,
-      data.indexed_asset_id,
-      data.hlsObject.video_url,
-    );
+      // Defensive: handle missing hlsObject or video_url
+      const videoUrl = data?.hlsObject?.video_url || null;
+      const insertResult = await insertVideoIntoDbIfNotExists(
+        data.analysis_text,
+        data.indexed_asset_id,
+        videoUrl,
+      );
 
     if (!insertResult.success) {
       console.warn("Failed to insert video into DB");

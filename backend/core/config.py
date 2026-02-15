@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     # gemini credentials
     GEMINI_API_KEY: str = ""
 
+    # chromadb credentials
+    CHROMA_API_KEY: str = ""
+    CHROMA_TENANT: str = ""
+    CHROMA_DATABASE: str = ""
+
     # mem0 (external memory store)
     MEM0_API_KEY: str = ""
     MEM0_USER_ID: str = "local_user"
