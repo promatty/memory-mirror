@@ -40,7 +40,7 @@ export function MirrorInterface() {
       {/* Left Sidebar */}
       <div className="w-64 border-r border-border bg-surface flex flex-col">
         {/* Audio Waveform Visualization */}
-        <div className="p-6 border-b border-border">
+        <div className="p-6">
           <AudioWaveform isPlaying={isPlaying} />
         </div>
 
@@ -58,7 +58,7 @@ export function MirrorInterface() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
         {/* Video/Additional Tab Toggle */}
-        <div className="flex items-center justify-center p-4 border-b border-border">
+        <div className="flex items-center justify-center p-4">
           <div className="inline-flex rounded-lg border border-border bg-surface p-1">
             <button
               onClick={() => setActiveTab("video")}
