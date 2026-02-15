@@ -6,7 +6,10 @@ import { Mic, Send, Square, History, Brain } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { VideoPlayer } from "./video-player";
-import { TranscriptViewer, type TranscriptViewerRef } from "./transcript-viewer";
+import {
+  TranscriptViewer,
+  type TranscriptViewerRef,
+} from "./transcript-viewer";
 import { MemoryInfoView } from "./memory-info-view";
 import { UploadSection } from "./upload-section";
 import { useSpeechRecognition } from "../../hooks/use-speech-recognition";
@@ -24,7 +27,7 @@ import type { ConversationHistoryItem } from "@/app/actions/conversation-actions
 const TABS = {
   VIDEO: "Video",
   ADDITIONAL: "Additional",
-} as const
+} as const;
 export function MirrorInterface() {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -32,10 +35,13 @@ export function MirrorInterface() {
   const [inputText, setInputText] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [captionText, setCaptionText] = useState("");
-  const [activeTab, setActiveTab] = useState<typeof TABS[keyof typeof TABS]>(TABS.VIDEO);
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[keyof typeof TABS]>(
+    TABS.VIDEO,
+  );
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
-  const [currentAlignment, setCurrentAlignment] = useState<AlignmentData | null>(null);
+  const [currentAlignment, setCurrentAlignment] =
+    useState<AlignmentData | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [currentUserPrompt, setCurrentUserPrompt] = useState<string>("");
 
@@ -48,7 +54,9 @@ export function MirrorInterface() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(
+    null,
+  );
 
   const handleSpeechResult = useCallback((text: string) => {
     if (text) {
@@ -180,22 +188,24 @@ export function MirrorInterface() {
         </div>
 
         {/* upload and history buttons */}
-        <div className="p-6 space-y-3">
-          <UploadSection onUploadSuccess={resetMirrorInterface} />
-          <button
-            onClick={() => setIsHistoryOpen(true)}
-            className="w-full px-4 py-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium"
-          >
-            <History className="w-4 h-4" />
-            View History
-          </button>
-          <button
-            onClick={() => router.push('/embedding')}
-            className="w-full px-4 py-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium"
-          >
-            <Brain className="w-4 h-4" />
-            View Memory Embedding
-          </button>
+        <div className="p-4 space-y-3">
+          <div className="flex flex-row gap-2">
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="w-full px-4 py-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <History className="w-4 h-4" />
+              View History
+            </button>
+            <UploadSection onUploadSuccess={resetMirrorInterface} />
+            <button
+              onClick={() => router.push("/embedding")}
+              className="w-full px-4 py-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <Brain className="w-4 h-4" />
+              View Memory Embedding
+            </button>
+          </div>
         </div>
       </div>
 

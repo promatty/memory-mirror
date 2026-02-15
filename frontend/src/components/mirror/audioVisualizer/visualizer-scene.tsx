@@ -1,8 +1,11 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { ParticleSphere } from "@/components/mirror/audioVisualizer/particle-sphere";
+import { Points, PointMaterial } from "@react-three/drei";
+import * as THREE from "three";
+import { useRef, useMemo } from "react";
 
 interface VisualizerSceneProps {
   bassFrequency: number;
@@ -30,8 +33,11 @@ export function VisualizerScene({
         powerPreference: "high-performance",
       }}
       dpr={[1, 2]}
-      style={{ background: "#050710" }}
+      style={{
+        background: "radial-gradient(circle at 30% 30%, #0f172a, #020617)",
+      }}
     >
+      <Particles />
       <color attach="background" args={["#050710"]} />
       <fog attach="fog" args={["#050710", 18, 35]} />
 
@@ -57,5 +63,37 @@ export function VisualizerScene({
         dampingFactor={0.05}
       />
     </Canvas>
+  );
+}
+
+function Particles() {
+  const ref = useRef<THREE.Points>(null!);
+
+  const particlesPosition = useMemo(() => {
+    const positions = new Float32Array(5000 * 3);
+    for (let i = 0; i < 5000; i++) {
+      positions[i * 3 + 0] = (Math.random() - 0.5) * 20;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 20;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+    }
+    return positions;
+  }, []);
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    ref.current.rotation.x = time * 0.02;
+    ref.current.rotation.y = time * 0.03;
+  });
+
+  return (
+    <Points ref={ref} positions={particlesPosition} stride={3}>
+      <PointMaterial
+        transparent
+        color="#7dd3fc"
+        size={0.03}
+        sizeAttenuation
+        depthWrite={false}
+      />
+    </Points>
   );
 }
