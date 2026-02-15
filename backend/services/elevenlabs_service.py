@@ -1,6 +1,6 @@
 from pathlib import Path
 from elevenlabs import ElevenLabs
-from core.config import settings
+from ..core.config import settings
 
 class ElevenLabsService:
     def __init__(self):

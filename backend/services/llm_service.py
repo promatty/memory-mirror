@@ -1,10 +1,8 @@
-from typing import Any, Awaitable, Optional
+from typing import Any, Optional, Awaitable
+from ..core.config import settings
 
 from ibm_watsonx_ai.foundation_models.schema import TextChatParameters
 from langchain_ibm import ChatWatsonx
-
-from core.config import settings
-
 
 class LLMService:
     """Wrapper around Watsonx `ChatWatsonx` that follows the project's
@@ -71,7 +69,7 @@ class LLMService:
 
         return client.ainvoke(messages)
 
-    def generate_response(
+    async def generate_response(
         self,
         prompt: str,
         context: str,
@@ -79,7 +77,7 @@ class LLMService:
     ) -> str:
         """
         Generate a conversational response using WatsonX LLM.
-        Synchronous wrapper for Memory Mirror use case.
+        Async method for Memory Mirror use case.
 
         Args:
             prompt: The user's question/prompt
@@ -89,8 +87,6 @@ class LLMService:
         Returns:
             Generated text response
         """
-        import asyncio
-
         try:
             # Construct the full prompt with context and instructions
             full_system_prompt = f"""
@@ -104,13 +100,13 @@ Please respond naturally in first person, as if you're recalling and talking abo
 
             print(f"🤖 Generating response for prompt: '{prompt[:50]}...'")
 
-            # Run async chat method synchronously
-            response = asyncio.run(self.chat(
+            # Await the async chat method
+            response = await self.chat(
                 system_prompt=full_system_prompt,
                 user_prompt=prompt,
                 max_completion_tokens=500,
                 temperature=0.7
-            ))
+            )
 
             generated_text = response.content
             print(f"✅ Response generated successfully")
@@ -121,10 +117,10 @@ Please respond naturally in first person, as if you're recalling and talking abo
             print(f"❌ Error generating response: {str(e)}")
             raise
 
-    def generate_simple_response(self, prompt: str) -> str:
+    async def generate_simple_response(self, prompt: str) -> str:
         """
         Generate a simple response without context.
-        Synchronous wrapper for basic text generation.
+        Async method for basic text generation.
 
         Args:
             prompt: The user's question/prompt
@@ -132,19 +128,17 @@ Please respond naturally in first person, as if you're recalling and talking abo
         Returns:
             Generated text response
         """
-        import asyncio
-
         try:
             print(f"🤖 Generating simple response for: '{prompt[:50]}...'")
 
             system_prompt = "You are a helpful assistant. Provide clear and concise answers."
 
-            response = asyncio.run(self.chat(
+            response = await self.chat(
                 system_prompt=system_prompt,
                 user_prompt=prompt,
                 max_completion_tokens=300,
                 temperature=0.5
-            ))
+            )
 
             generated_text = response.content
 

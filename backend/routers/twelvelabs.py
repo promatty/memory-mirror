@@ -184,6 +184,13 @@ async def upload_video(
 @router.post("/search_video", response_model=SearchVideoResponse)
 async def search_video(request: SearchVideoRequest):
     try:
+        # Validate that at least one query parameter is provided
+        if not request.query_text and not request.image_url and not request.image_path:
+            return SearchVideoResponse(
+                status=HTTPStatus.BAD_REQUEST,
+                error="At least one of query_text, image_url, or image_path must be provided"
+            )
+
         client = TwelveLabsModel.get_twelve_labs_client()
 
         query_media_type = None
@@ -201,17 +208,30 @@ async def search_video(request: SearchVideoRequest):
                 path = path.lstrip("/")
             query_media_file = open(path, "rb")
 
-        search_pager = client.search.query(
-            index_id=settings.TWELVE_LABS_INDEX_ID,
-            search_options=request.search_options,
-            query_text=request.query_text,
-            query_media_type=query_media_type,
-            query_media_url=query_media_url,
-            query_media_file=query_media_file,
-            group_by="clip",
-            sort_option="score",
-            page_limit=1,
-        )
+        # Build search parameters - only include query_text if it's not None/empty
+        search_params = {
+            "index_id": settings.TWELVE_LABS_INDEX_ID,
+            "search_options": request.search_options,
+            "group_by": "clip",
+            "sort_option": "score",
+            "page_limit": 1,
+        }
+
+        if request.query_text:
+            search_params["query_text"] = request.query_text
+
+        if query_media_type:
+            search_params["query_media_type"] = query_media_type
+
+        if query_media_url:
+            search_params["query_media_url"] = query_media_url
+
+        if query_media_file:
+            search_params["query_media_file"] = query_media_file
+
+        print(f"📤 Calling Twelve Labs with params: {list(search_params.keys())}")
+
+        search_pager = client.search.query(**search_params)
 
         top_item = next(iter(search_pager), None)
         if not top_item:

@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Mic, Send, Square } from "lucide-react";
+import { toast } from "sonner";
 import { AudioWaveform } from "./audio-waveform";
 import { VideoPlayer } from "./video-player";
 import { Captions } from "./captions";
 import { UploadSection } from "./upload-section";
 import { useSpeechRecognition } from "../../hooks/use-speech-recognition";
+import { queryMemory } from "@/app/actions/mirror-actions";
+import type { QueryMemoryResponse } from "@/types/memory";
 
 export function MirrorInterface() {
 	const [inputText, setInputText] = useState("");
@@ -33,18 +37,55 @@ export function MirrorInterface() {
 		toggleListening();
 	};
 
-	const handleSendMessage = () => {
-		if (!inputText.trim()) return;
+	// TanStack Query mutation for querying memory
+	const queryMemoryMutation = useMutation({
+		mutationFn: async (userPrompt: string) => {
+			const result = await queryMemory({ userPrompt });
 
-		// TODO: Send message to backend and get response
-		console.log("Sending message:", inputText);
+			if (!result.success || !result.data) {
+				throw new Error(result.error || "Failed to query memory");
+			}
+
+			return result.data;
+		},
+		onMutate: () => {
+			toast.loading("Searching your memories...", { id: "query-memory" });
+		},
+		onSuccess: (data: QueryMemoryResponse) => {
+			if (data.videoUrl && data.audioBase64 && data.narrative) {
+				// Success: Update UI with video, audio, and narrative
+				setCurrentVideoUrl(data.videoUrl);
+				setCaptionText(data.narrative);
+				setIsPlaying(true);
+
+				toast.success("Memory found!", { id: "query-memory" });
+
+				// Play audio
+				const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
+				audio.play().catch((error) => {
+					console.error("Failed to play audio:", error);
+					toast.error("Failed to play audio");
+				});
+			}
+		},
+		onError: (error: Error) => {
+			const errorMessage = error instanceof Error ? error.message : "Failed to query memory";
+			toast.error(errorMessage, { id: "query-memory" });
+		},
+	});
+
+	const handleSendMessage = () => {
+		if (!inputText.trim() || queryMemoryMutation.isPending) return;
+
+		const userQuery = inputText.trim();
 		setInputText("");
+		queryMemoryMutation.mutate(userQuery);
 	};
 
-	const handleKeyPress = (e: React.KeyboardEvent) => {
+	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
-			handleSendMessage();
+			void handleSendMessage();
 		}
 	};
 
@@ -139,9 +180,10 @@ export function MirrorInterface() {
 							<textarea
 								value={displayValue}
 								onChange={(e) => setInputText(e.target.value)}
-								onKeyPress={handleKeyPress}
+								onKeyDown={handleKeyDown}
 								placeholder="text"
-								className="w-full px-4 py-2.5 pr-12 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+								disabled={queryMemoryMutation.isPending}
+								className="w-full px-4 py-2.5 pr-12 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent disabled:opacity-50"
 								rows={1}
 								style={{
 									minHeight: "44px",
@@ -149,8 +191,8 @@ export function MirrorInterface() {
 								}}
 							/>
 							<button
-								onClick={handleSendMessage}
-								disabled={!inputText.trim() && !interimTranscript}
+								onClick={() => void handleSendMessage()}
+								disabled={(!inputText.trim() && !interimTranscript) || queryMemoryMutation.isPending}
 								className="absolute right-2 bottom-2 p-2 rounded-md text-primary hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
 								aria-label="Send message"
 							>
