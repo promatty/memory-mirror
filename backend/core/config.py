@@ -1,8 +1,8 @@
-from typing import List
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
+from typing import Any, List
 
-from typing import Any
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     API_PREFIX: str = "/api"
@@ -15,6 +15,9 @@ class Settings(BaseSettings):
 
     # elevenlabs credentials
     ELEVENLABS_API_KEY: str = ""
+
+    WATSONX_API_KEY: str = ""
+    WATSONX_PROJECT_ID: str = ""
 
 
     @field_validator("ALLOWED_ORIGINS")
