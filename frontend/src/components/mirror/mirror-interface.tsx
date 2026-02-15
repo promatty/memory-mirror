@@ -37,27 +37,27 @@ export function MirrorInterface() {
 
   return (
     <div className="h-screen flex">
-      {/* Left Sidebar */}
+      {/* left sidebar */}
       <div className="w-64 border-r border-border bg-surface flex flex-col">
-        {/* Audio Waveform Visualization */}
+        {/* audio waveform visualization */}
         <div className="p-6">
           <AudioWaveform isPlaying={isPlaying} />
         </div>
 
-        {/* Captions Area */}
+        {/* captions area */}
         <div className="flex-1 p-6 border-b border-border overflow-y-auto">
           <Captions text={captionText} />
         </div>
 
-        {/* Upload Button */}
+        {/* upload button */}
         <div className="p-6">
           <UploadSection />
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* main content area */}
       <div className="flex-1 flex flex-col">
-        {/* Video/Additional Tab Toggle */}
+        {/* video/additional tab toggle */}
         <div className="flex items-center justify-center p-4">
           <div className="inline-flex rounded-lg border border-border bg-surface p-1">
             <button
@@ -84,7 +84,7 @@ export function MirrorInterface() {
           </div>
         </div>
 
-        {/* Video Display Area */}
+        {/* video display area */}
         <div className="flex-1 p-8 overflow-y-auto">
           <VideoPlayer 
             videoUrl={currentVideoUrl}
@@ -93,23 +93,24 @@ export function MirrorInterface() {
           />
         </div>
 
-        {/* Input Controls */}
+        {/* input controls */}
         <div className="p-5 border-t border-border bg-surface">
           <div className="max-w-4xl mx-auto flex items-center gap-4">
-            {/* Speak Button */}
+            {/* speak button */}
             <button
               onClick={handleSpeak}
-              className={`px-6 py-4 rounded-lg border transition-all ${
+              className={`px-6 rounded-lg border transition-all ${
                 isRecording
                   ? "bg-destructive border-destructive text-destructive-foreground"
                   : "border-border hover:border-primary hover:text-primary"
               }`}
+              style={{ height: "44px" }}
               aria-label="Record voice message"
             >
               <Mic className="w-5 h-5" />
             </button>
 
-            {/* Text Input */}
+            {/* text input */}
             <div className="flex-1 relative">
               <textarea
                 value={inputText}
