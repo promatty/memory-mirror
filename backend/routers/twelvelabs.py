@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from fastapi import APIRouter
+from fastapi import APIRouter, UploadFile, File, Form
 import time
 from datetime import datetime
 
@@ -51,34 +51,55 @@ async def get_video(request: GetVideoRequest):
             error=str(e)
         )
 
-@router.post("/upload-video", response_model=UploadVideoResponse)
-async def upload_video(request: UploadVideoRequest):
+@router.post("/upload-video")
+async def upload_video(
+    video: UploadFile = File(...),
+    metadata: str = Form(None)):
+    """
+    Upload a video file as binary using UploadFile and File.
+    """
+    from fastapi.responses import JSONResponse
+    import json
     try:
         client = TwelveLabsModel.get_twelve_labs_client()
+        import json
+        # Parse metadata JSON string if provided
+        if metadata:
+            user_metadata = json.loads(metadata)
+        else:
+            user_metadata = None
 
-        prompt = """
-            can you describe whats happening in this video?
-        """
-        
-        print(f"Uploading video from: {request.video_path}")
+        # Compose prompt with metadata
+        prompt = (
+            "You are an expert at summarizing personal memory videos. "
+            "Please generate a detailed title, summary, and keywords for this video, "
+            "and make sure to reference and incorporate the following user metadata (such as people, location, mood, date, tags, etc) into your summary and keywords as much as possible. "
+            "If the metadata is relevant, mention it naturally in the summary and include it in the keywords. "
+            "Here is the user metadata for this video:\n"
+            f"{json.dumps(user_metadata, ensure_ascii=False, indent=2) if user_metadata else 'None'}"
+        )
 
+        print(f"Uploading video: {video.filename}")
         index = client.indexes.retrieve(
             index_id=settings.TWELVE_LABS_INDEX_ID
         )
-
-        path = request.video_path
-        path = path.lstrip("/")
-        
         asset = client.assets.create(
             method="direct",
-            file=open(path, "rb")
+            file=video.file  # file-like object
         )
-        print(f"Created asset: id={asset.id}")  
+        print(f"Created asset: id={asset.id}")
         indexed_asset = client.indexes.indexed_assets.create(
             index_id=index.id,
             asset_id=asset.id,
-            enable_video_stream=True, # very important to enable video streams
+            enable_video_stream=True # very important to enable video streams
         )
+        # Attach user_metadata if provided
+        if user_metadata:
+            client.indexes.videos.update(
+                index_id=index.id,
+                video_id=indexed_asset.id,
+                user_metadata=user_metadata
+            )
         print(f"Created indexed asset: id={indexed_asset.id}")
 
         print("Waiting for indexing to complete.")
@@ -96,31 +117,68 @@ async def upload_video(request: UploadVideoRequest):
                 raise RuntimeError("Indexing failed")
             time.sleep(5)
 
-        text_stream = client.analyze_stream(video_id=indexed_asset.id, prompt=prompt)
+        # Add response_format for analyze_stream
+        response_format = dict(
+            type="json_schema",
+            json_schema={
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "summary": {"type": "string"},
+                    "keywords": {"type": "array", "items": {"type": "string"}},
+                    "metadata": {"type": "object"},
+                },
+            },
+        )
 
+        text_stream = client.analyze_stream(
+            video_id=indexed_asset.id,
+            prompt=prompt,
+            response_format=response_format
+        )
+        analysis_json = None
         analysis_text = ""
         for text in text_stream:
-           if text.event_type == "text_generation":
+            if text.event_type == "text_generation":
                 analysis_text += text.text
+            elif text.event_type == "json_generation":
+                analysis_json = text.json
 
-        # TODO:
-        # once we have the analysis text, we could store it
-        # so that the next time we retrieve this specific asset
-        # we can return the analysis text immediately without needing 
-        # to re-analyze the video
+        if analysis_json is not None:
+            if "metadata" in analysis_json and isinstance(analysis_json["metadata"], dict):
+                merged_metadata = dict(analysis_json["metadata"])
+                if user_metadata:
+                    merged_metadata.update(user_metadata)
+                analysis_json["metadata"] = merged_metadata
+            else:
+                analysis_json["metadata"] = user_metadata if user_metadata else {}
+            analysis_text = json.dumps(analysis_json, ensure_ascii=False)
 
-        return UploadVideoResponse(
-            status=HTTPStatus.OK,
-            hlsObject=indexed_asset.hls,
-            indexed_asset_id=indexed_asset.id,
-            analysis_text=analysis_text,
+        # Convert HlsObject to dict for JSON serialization
+        hls_obj = indexed_asset.hls
+        if hasattr(hls_obj, 'dict'):
+            hls_obj = hls_obj.dict()
+        elif hasattr(hls_obj, '__dict__'):
+            hls_obj = dict(hls_obj.__dict__)
+        return JSONResponse(
+            status_code=HTTPStatus.OK,
+            content={
+                "status": HTTPStatus.OK,
+                "hlsObject": hls_obj,
+                "indexed_asset_id": indexed_asset.id,
+                "analysis_text": analysis_text,
+                "analysis_json": analysis_json,
+                "metadata": user_metadata,
+            }
         )
-        
     except Exception as e:
         print(f"Error analyzing video: {str(e)}")
-        return UploadVideoResponse(
-            status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            error=str(e)
+        return JSONResponse(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            content={
+                "status": HTTPStatus.INTERNAL_SERVER_ERROR,
+                "error": str(e)
+            }
         )
 
 @router.post("/search_video", response_model=SearchVideoResponse)
