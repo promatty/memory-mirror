@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ReactPlayer from "react-player";
 
 export default function DebugPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined);
+  const searchParams = useSearchParams();
 
   const handleCheck = async () => {
     setIsLoading(true);
@@ -34,19 +36,23 @@ export default function DebugPage() {
   const handleGetVideo = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/", {
-        cache: "no-store",
-        body: JSON.stringify({
-          indexed_asset_id: "",
-        }),
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
+      const indexedAssetId = "699152f441a8303306571b49";
+
+      const response = await fetch(
+        `http://localhost:8000/api/twelvelabs/get-video`,
+        {
+          cache: "no-store",
+          method: "POST",
+          body: JSON.stringify({
+            indexed_asset_id: indexedAssetId,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       const data = await response.json();
-      setVideoUrl(data.hlsObject.video_url);
       setIsLoading(false);
       console.log(data);
     } catch (error) {

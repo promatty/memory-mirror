@@ -29,14 +29,15 @@ async def health_check():
 
 @router.post("/get-video", response_model=GetVideoResponse)
 async def get_video(request: GetVideoRequest):
+    indexed_asset_id = request.indexed_asset_id
     try:
         client = TwelveLabsModel.get_twelve_labs_client()
 
-        print("Waiting for indexing to complete.")
+        print("Fetching indexed asset details.")
 
         indexed_asset = client.indexes.indexed_assets.retrieve(
             settings.TWELVE_LABS_INDEX_ID,
-            request.indexed_asset_id
+            indexed_asset_id,
         )
 
         return GetVideoResponse(
@@ -44,7 +45,7 @@ async def get_video(request: GetVideoRequest):
         )
         
     except Exception as e:
-        print(f"❌ Error analyzing video: {str(e)}")
+        print(f"❌ Error fetching indexed asset details: {str(e)}")
         return GetVideoResponse(
             hlsObject=None,
             error=str(e)
