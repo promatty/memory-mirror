@@ -79,7 +79,7 @@ async def generate_response(request: QueryMemoryRequest):
         
         audio_path = tts_service.text_to_speech(
             text=narrative,
-            voice="21m00Tcm4TlvDq8ikWAM",  # Rachel voice
+            voice="wlUCbyBjJciHgW8SIZWH",  # Justin voice
             output_filename=f"response_{request.indexed_asset_id[:8]}"
         )
         
