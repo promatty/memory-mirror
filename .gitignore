@@ -24,7 +24,7 @@ dist-ssr
 *.sw?
 
 # all env files should be gitignored
-.env*
+.env
 __pycache__/
 backend/**/__pycache__/
 /backend/.venv
