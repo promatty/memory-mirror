@@ -1,27 +1,23 @@
-"use client"
+"use client";
 
-import { useRef } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
-const images = [
-  "/cat.jpg",
-  "/cat.jpg",
-  "/cat.jpg",
-]
+const images = ["/cat.jpg", "/cat.jpg", "/cat.jpg"];
 
 export function HeroSection() {
-  const containerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
-  })
+  });
 
-  const rotate1 = useTransform(scrollYProgress, [0, 1], [0, -15])
-  const rotate2 = useTransform(scrollYProgress, [0, 1], [0, 0])
-  const rotate3 = useTransform(scrollYProgress, [0, 1], [0, 15])
-  const x1 = useTransform(scrollYProgress, [0, 1], [0, -200])
-  const x3 = useTransform(scrollYProgress, [0, 1], [0, 200])
-  const y = useTransform(scrollYProgress, [0, 1], [0, 100])
+  const rotate1 = useTransform(scrollYProgress, [0, 1], [0, -15]);
+  const rotate2 = useTransform(scrollYProgress, [0, 1], [0, 0]);
+  const rotate3 = useTransform(scrollYProgress, [0, 1], [0, 15]);
+  const x1 = useTransform(scrollYProgress, [0, 1], [0, -200]);
+  const x3 = useTransform(scrollYProgress, [0, 1], [0, 200]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
 
   return (
     <section
@@ -80,7 +76,7 @@ export function HeroSection() {
         transition={{ duration: 1, delay: 0.8 }}
       >
         <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif text-center text-foreground mix-blend-difference">
-          Your work, <em className="italic">curated</em>.
+          Your story, <em className="italic">immortalized</em>.
         </h1>
       </motion.div>
 
@@ -99,5 +95,5 @@ export function HeroSection() {
         </motion.div>
       </motion.div>
     </section>
-  )
+  );
 }
