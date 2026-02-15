@@ -77,6 +77,90 @@ class LLMService:
             print(f"❌ LLMService.chat error: {exc}")
             raise
 
+    def generate_response(
+        self,
+        prompt: str,
+        context: str,
+        system_instruction: str = "Talk as if you were speaking in first person about your own memories and experiences."
+    ) -> str:
+        """
+        Generate a conversational response using WatsonX LLM.
+        Synchronous wrapper for Memory Mirror use case.
+
+        Args:
+            prompt: The user's question/prompt
+            context: Video summary/context from Twelve Labs
+            system_instruction: Instructions for response generation
+
+        Returns:
+            Generated text response
+        """
+        import asyncio
+
+        try:
+            # Construct the full prompt with context and instructions
+            full_system_prompt = f"""
+{system_instruction}
+
+Context from your memory:
+{context}
+
+Please respond naturally in first person, as if you're recalling and talking about your own memory.
+"""
+
+            print(f"🤖 Generating response for prompt: '{prompt[:50]}...'")
+
+            # Run async chat method synchronously
+            response = asyncio.run(self.chat(
+                system_prompt=full_system_prompt,
+                user_prompt=prompt,
+                max_completion_tokens=500,
+                temperature=0.7
+            ))
+
+            generated_text = response.content
+            print(f"✅ Response generated successfully")
+
+            return generated_text
+
+        except Exception as e:
+            print(f"❌ Error generating response: {str(e)}")
+            raise
+
+    def generate_simple_response(self, prompt: str) -> str:
+        """
+        Generate a simple response without context.
+        Synchronous wrapper for basic text generation.
+
+        Args:
+            prompt: The user's question/prompt
+
+        Returns:
+            Generated text response
+        """
+        import asyncio
+
+        try:
+            print(f"🤖 Generating simple response for: '{prompt[:50]}...'")
+
+            system_prompt = "You are a helpful assistant. Provide clear and concise answers."
+
+            response = asyncio.run(self.chat(
+                system_prompt=system_prompt,
+                user_prompt=prompt,
+                max_completion_tokens=300,
+                temperature=0.5
+            ))
+
+            generated_text = response.content
+
+            print(f"✅ Response generated successfully")
+            return generated_text
+
+        except Exception as e:
+            print(f"❌ Error generating response: {str(e)}")
+            raise
+
 
 # singleton instance
 _service_instance: Optional[LLMService] = None
