@@ -121,7 +121,7 @@ export function MirrorInterface() {
 							onClick={handleSpeak}
 							className={`px-6 rounded-lg border transition-all ${
 								isListening
-									? "bg-destructive border-destructive text-destructive-foreground animate-pulse"
+									? "bg-secondary border-secondary text-secondary-foreground"
 									: "border-border hover:border-primary hover:text-primary"
 							}`}
 							style={{ height: "44px" }}
