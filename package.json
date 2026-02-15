@@ -1,0 +1,11 @@
+{
+  "name": "memory-mirror",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n frontend,backend -c magenta,cyan \"yarn --cwd frontend dev\" \"cross-env PYTHONUTF8=1 uv --directory backend run fastapi dev main.py\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3"
+  }
+}
