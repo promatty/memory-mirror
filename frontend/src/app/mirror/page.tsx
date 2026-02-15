@@ -1,11 +1,15 @@
-"use client"
+"use client";
 
-import { MirrorInterface } from "@/components/mirror/mirror-interface"
+import type { CSSProperties } from "react";
+import { MirrorInterface } from "@/components/mirror/mirror-interface";
 
 export default function MirrorPage() {
   return (
-    <main className="h-screen overflow-hidden bg-background">
+    <main
+      className="h-screen overflow-hidden bg-background"
+      style={{ "--visualizer-height": "220px" } as CSSProperties}
+    >
       <MirrorInterface />
     </main>
-  )
+  );
 }
