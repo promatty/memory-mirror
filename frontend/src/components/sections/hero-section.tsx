@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const images = ["/cat.jpg", "/cat.jpg", "/cat.jpg"];
@@ -24,6 +25,14 @@ export function HeroSection() {
       ref={containerRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background px-6 py-24"
     >
+      {/* Navigation */}
+      <nav className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-50">
+        <Link href="/" className="text-xl font-serif italic">Memory Mirror</Link>
+        <Link href="/login" className="px-4 py-2 rounded-full border border-foreground/20 hover:bg-foreground/5 transition-colors text-sm font-medium">
+          Login
+        </Link>
+      </nav>
+
       {/* Stacked images */}
       <div className="relative flex items-center justify-center">
         <motion.div
