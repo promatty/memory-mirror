@@ -119,18 +119,19 @@ async def generate_response(request: QueryMemoryRequest):
                 version="v2",
                 filters={"user_id": settings.MEM0_USER_ID},
                 limit=5,
-            ).memory
-            or ""
+            )
         )
-        memory_context = [s.memory + "\n" for s in memory_context]
+
+        
+        print(memory_context["results"])
+        newMemoryContextList = [s["memory"] + "\n" for s in memory_context["results"]]
         print(
-            f"🧠 memory_context (len={len(memory_context)}): {memory_context[:500]}{'...' if len(memory_context) > 500 else ''}"
+            f"🧠 memory_context (len={len(newMemoryContextList)}): {newMemoryContextList[:500]}{'...' if len(newMemoryContextList) > 500 else ''}"
         )
 
         narrative = await llm_service.generate_response(
             prompt=request.user_prompt,
-            context=request.analysis_text,
-            context=request.analysis_text + "\n" + "".join(memory_context),
+            context=request.analysis_text + "\n" + "".join(newMemoryContextList),
             system_instruction="Talk as if you were speaking in first person about your own memories and experiences. In your response, there will a be a bunch of keywords and metadata, "
             "shape your response around those keywords and metadata that are in the analysis text.",
         )
