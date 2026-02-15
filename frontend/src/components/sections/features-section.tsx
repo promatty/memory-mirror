@@ -69,16 +69,11 @@ function VoiceAnimation() {
 }
 
 function MemoryAnimation() {
-  const [items, setItems] = useState([1, 2, 3])
+  const [highlightIndex, setHighlightIndex] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setItems((prev) => {
-        const next = [...prev]
-        next.push(next.length + 1)
-        if (next.length > 6) next.shift()
-        return next
-      })
+      setHighlightIndex((prev) => (prev + 1) % 6)
     }, 1500)
     return () => clearInterval(interval)
   }, [])
@@ -86,14 +81,15 @@ function MemoryAnimation() {
   return (
     <div className="h-full p-4 flex items-center justify-center overflow-hidden">
       <div className="grid grid-cols-3 gap-2 w-full max-w-[140px]">
-        {items.slice(-6).map((i) => (
+        {[0, 1, 2, 3, 4, 5].map((i) => (
           <motion.div
             key={i}
             className="bg-foreground/20 rounded-md h-[30px]"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            animate={{ 
+              opacity: highlightIndex === i ? 1 : 0.3,
+              scale: highlightIndex === i ? 1.05 : 1
+            }}
+            transition={{ duration: 0.4 }}
           />
         ))}
       </div>

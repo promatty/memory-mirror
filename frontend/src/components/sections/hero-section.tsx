@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 const images = ["/scrapbook2.jpeg", "/scrapbook3.jpeg", "/scrapbook1.jpeg"];
@@ -41,44 +42,50 @@ export function HeroSection() {
 			{/* Stacked images */}
 			<div className="relative flex items-center justify-center">
 				<motion.div
-					className="absolute w-[280px] md:w-[320px] aspect-[3/4] rounded-xl overflow-hidden shadow-2xl"
+					className="absolute w-[280px] md:w-[320px] aspect-3/4 rounded-xl overflow-hidden shadow-2xl"
 					style={{ rotate: rotate1, x: x1, y, zIndex: 1 }}
 					initial={{ clipPath: "inset(100% 0 0 0)" }}
 					animate={{ clipPath: "inset(0 0 0 0)" }}
 					transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
 				>
-					<img
+					<Image
 						src={images[0] || "/placeholder.svg"}
 						alt="Portfolio showcase 1"
 						className="w-full h-full object-cover"
+						fill
+						sizes="(max-width: 768px) 280px, 320px"
 					/>
 				</motion.div>
 
 				<motion.div
-					className="relative w-[280px] md:w-[320px] aspect-[3/4] rounded-xl overflow-hidden shadow-2xl"
+					className="relative w-[280px] md:w-[320px] aspect-3/4 rounded-xl overflow-hidden shadow-2xl"
 					style={{ rotate: rotate2, y, zIndex: 2 }}
 					initial={{ clipPath: "inset(100% 0 0 0)" }}
 					animate={{ clipPath: "inset(0 0 0 0)" }}
 					transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
 				>
-					<img
+					<Image
 						src={images[1] || "/placeholder.svg"}
 						alt="Portfolio showcase 2"
 						className="w-full h-full object-cover"
+						fill
+						sizes="(max-width: 768px) 280px, 320px"
 					/>
 				</motion.div>
 
 				<motion.div
-					className="absolute w-[280px] md:w-[320px] aspect-[3/4] rounded-xl overflow-hidden shadow-2xl"
+					className="absolute w-[280px] md:w-[320px] aspect-3/4 rounded-xl overflow-hidden shadow-2xl"
 					style={{ rotate: rotate3, x: x3, y, zIndex: 1 }}
 					initial={{ clipPath: "inset(100% 0 0 0)" }}
 					animate={{ clipPath: "inset(0 0 0 0)" }}
 					transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
 				>
-					<img
+					<Image
 						src={images[2] || "/placeholder.svg"}
 						alt="Portfolio showcase 3"
 						className="w-full h-full object-cover"
+						fill
+						sizes="(max-width: 768px) 280px, 320px"
 					/>
 				</motion.div>
 			</div>
