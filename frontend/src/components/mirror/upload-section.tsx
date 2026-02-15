@@ -49,9 +49,8 @@ export function UploadSection() {
     }
     const formData = new FormData();
     formData.append("video", video);
-    Object.entries(metadata).forEach(([key, value]) => {
-      formData.append(key, value.toString());
-    });
+    const metadataJson = JSON.stringify(metadata);
+    formData.append("metadata", metadataJson);
     try {
       const res = await fetch("/api/upload-video", {
         method: "POST",
@@ -59,8 +58,8 @@ export function UploadSection() {
       });
       if (!res.ok) throw new Error("Upload failed");
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Upload failed");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setUploading(false);
     }
