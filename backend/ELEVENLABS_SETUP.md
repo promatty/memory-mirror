@@ -1,6 +1,6 @@
 # ElevenLabs TTS Integration
 
-## Setup Complete ✅
+## Setup Complete 
 
 The ElevenLabs Text-to-Speech API has been successfully integrated into the memory-mirror backend.
 
@@ -77,9 +77,9 @@ uv run python -m examples.elevenlabs_example
 
 ## Test Results
 
-✅ All tests passed:
-- Basic TTS: ✅ PASSED
-- Custom Text: ✅ PASSED
+All tests passed:
+- Basic TTS: PASSED
+- Custom Text: PASSED
 
 Generated files:
 - `test_hello.mp3` (26 KB)

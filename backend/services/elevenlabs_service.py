@@ -53,11 +53,11 @@ class ElevenLabsService:
                 for chunk in audio_generator:
                     f.write(chunk)
             
-            print(f"✅ Audio generated successfully: {output_path}")
+            print(f"Audio generated successfully: {output_path}")
             return output_path
             
         except Exception as e:
-            print(f"❌ Error generating speech: {str(e)}")
+            print(f"Error generating speech: {str(e)}")
             raise
     
     def list_voices(self) -> list:
@@ -71,7 +71,7 @@ class ElevenLabsService:
             voices = self.client.voices.get_all()
             return voices.voices
         except Exception as e:
-            print(f"❌ Error fetching voices: {str(e)}")
+            print(f"Error fetching voices: {str(e)}")
             raise
 
 # Singleton instance
