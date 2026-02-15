@@ -1,6 +1,8 @@
 from http import HTTPStatus
 from fastapi import APIRouter, UploadFile, File, Form
 import time
+import json
+import re
 from datetime import datetime
 
 from ..models.schemas import (
@@ -16,6 +18,8 @@ from ..models.schemas import (
 from ..core.models import TwelveLabsModel
 
 from ..core.config import settings
+
+from ..services.embedding_service import embedding_service
 
 router = APIRouter(
     prefix="/twelvelabs",
@@ -69,14 +73,13 @@ async def upload_video(
         else:
             user_metadata = None
 
-        # Compose prompt with metadata
+        # Optimization: Explicitly limit keyword count to prevent model looping/hallucination
         prompt = (
             "You are an expert at summarizing personal memory videos. "
-            "Please generate a detailed title, summary, and keywords for this video, "
-            "and make sure to reference and incorporate the following user metadata (such as people, location, mood, date, tags, etc) into your summary and keywords as much as possible. "
-            "If the metadata is relevant, mention it naturally in the summary and include it in the keywords. "
-            "Here is the user metadata for this video:\n"
-            f"{json.dumps(user_metadata, ensure_ascii=False, indent=2) if user_metadata else 'None'}"
+            "Generate a detailed title, summary, and exactly 10-15 unique keywords. "
+            "Incorporate the following user metadata naturally into the summary and keywords. "
+            "OUTPUT MUST BE ONLY A VALID JSON OBJECT.\n"
+            f"User Metadata: {json.dumps(user_metadata, ensure_ascii=False) if user_metadata else 'None'}"
         )
 
         print(f"Uploading video: {video.filename}")
@@ -139,20 +142,33 @@ async def upload_video(
         analysis_json = None
         analysis_text = ""
         for text in text_stream:
+            print("text", text)
+
             if text.event_type == "text_generation":
                 analysis_text += text.text
-            elif text.event_type == "json_generation":
-                analysis_json = text.json
 
-        if analysis_json is not None:
-            if "metadata" in analysis_json and isinstance(analysis_json["metadata"], dict):
-                merged_metadata = dict(analysis_json["metadata"])
-                if user_metadata:
-                    merged_metadata.update(user_metadata)
-                analysis_json["metadata"] = merged_metadata
-            else:
-                analysis_json["metadata"] = user_metadata if user_metadata else {}
-            analysis_text = json.dumps(analysis_json, ensure_ascii=False)
+        if analysis_text is not None and analysis_text.strip() != "":
+            try:
+                analysis_json = json.loads(analysis_text)
+                print(f"✅ Successfully parsed analysis JSON: {analysis_json}")
+            except json.JSONDecodeError:
+                print(f"⚠️ Failed to parse analysis JSON: {analysis_text}")
+                analysis_json = None
+
+            try:
+                # Flatten metadata for ChromaDB (scalar values only)
+                chroma_metadata = {
+                    "title": analysis_json["title"],
+                    "summary": analysis_json["summary"],
+                    "indexed_asset_id": indexed_asset.id
+                }
+                embedding_service.store_video_keywords(
+                    indexed_asset_id=indexed_asset.id,
+                    keywords=analysis_json["keywords"],
+                    metadata=chroma_metadata
+                )
+            except Exception as e:
+                print(f"⚠️ ChromaDB storage failed: {e}")
 
         # Convert HlsObject to dict for JSON serialization
         hls_obj = indexed_asset.hls
