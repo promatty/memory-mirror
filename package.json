@@ -1,11 +1,19 @@
 {
   "name": "memory-mirror",
   "private": true,
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
-    "dev": "concurrently -k -n frontend,backend -c magenta,cyan \"yarn --cwd frontend dev\" \"cross-env PYTHONUTF8=1 uv --directory backend run fastapi dev main.py\""
+    "dev": "concurrently -k -n frontend,backend -c magenta,cyan \"yarn workspace frontend dev\" \"cross-env PYTHONUTF8=1 uv --directory backend run fastapi dev main.py\"",
+    "dev:frontend": "yarn workspace frontend dev",
+    "build:frontend": "yarn workspace frontend build",
+    "install:all": "yarn install"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "concurrently": "^9.1.0",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "tailwindcss": "^4.1.18"
   }
 }

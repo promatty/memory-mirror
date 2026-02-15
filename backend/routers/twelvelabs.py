@@ -116,7 +116,7 @@ async def upload_video(request: UploadVideoRequest):
         )
         
     except Exception as e:
-        print(f"❌ Error analyzing video: {str(e)}")
+        print(f"Error analyzing video: {str(e)}")
         return UploadVideoResponse(
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
             error=str(e)
@@ -176,7 +176,7 @@ async def search_video(request: SearchVideoRequest):
         )
 
     except Exception as e:
-        print(f"❌ Error searching video: {str(e)}")
+        print(f"Error searching video: {str(e)}")
         return SearchVideoResponse(
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
             error=str(e),
