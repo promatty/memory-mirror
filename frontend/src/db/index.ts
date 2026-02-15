@@ -5,9 +5,10 @@ import * as schema from "@/db/schema";
 
 loadEnvConfig(process.cwd());
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL must be a Neon postgres connection string");
-}
+const DATABASE_URL="postgresql://postgres.pxyanfsmmepaqqwnzrce:YlGbhzphnhJBEtMY@aws-1-ca-central-1.pooler.supabase.com:6543/postgres"
+// if (DATABASE_URL) {
+//   throw new Error("DATABASE_URL must be a Neon postgres connection string");
+// }
 
 /**
  * Cache the database connection in development. This avoids creating a new connection on every HMR
@@ -17,7 +18,7 @@ const globalForDb = globalThis as unknown as {
   conn: postgres.Sql | undefined;
 };
 
-const conn = globalForDb.conn ?? postgres(process.env.DATABASE_URL);
+const conn = globalForDb.conn ?? postgres(DATABASE_URL);
 if (process.env.NODE_ENV !== "production") globalForDb.conn = conn;
 
 export const db = drizzle(conn, {

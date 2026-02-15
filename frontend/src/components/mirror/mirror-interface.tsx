@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Mic, Send, Square } from "lucide-react";
+import { Mic, Send, Square, History } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "./video-player";
 import { Captions } from "./captions";
@@ -11,6 +11,8 @@ import { useSpeechRecognition } from "../../hooks/use-speech-recognition";
 import { queryMemory } from "@/app/actions/mirror-actions";
 import type { QueryMemoryResponse } from "@/types/memory";
 import { VoiceVisualizer } from "@/components/mirror/audioVisualizer/voice-visualizer";
+import { HistoryDrawer } from "@/components/history/history-drawer";
+import type { ConversationHistoryItem } from "@/app/actions/conversation-actions";
 
 export function MirrorInterface() {
   const [inputText, setInputText] = useState("");
@@ -19,6 +21,7 @@ export function MirrorInterface() {
   const [activeTab, setActiveTab] = useState<"video" | "additional">("video");
   const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   const handleSpeechResult = useCallback((text: string) => {
     if (text) {
@@ -85,6 +88,20 @@ export function MirrorInterface() {
     }
   };
 
+  // Handle replaying a conversation from history
+  const handleReplayConversation = useCallback(
+    (conversation: ConversationHistoryItem) => {
+      // Load the conversation data into the interface
+      setCurrentVideoUrl(conversation.videoUrl || null);
+      setCaptionText(conversation.narrative);
+      setCurrentAudioUrl(`data:audio/mpeg;base64,${conversation.audioBase64}`);
+      setIsPlaying(true);
+
+      toast.success("Replaying conversation");
+    },
+    []
+  );
+
   // calculate display value for textarea
   // if listening, we show current committed text + interim
   // we add a space if there's existing text and interim text
@@ -106,9 +123,16 @@ export function MirrorInterface() {
           <Captions text={captionText} />
         </div>
 
-        {/* upload button */}
-        <div className="p-6">
+        {/* upload and history buttons */}
+        <div className="p-6 space-y-3">
           <UploadSection />
+          <button
+            onClick={() => setIsHistoryOpen(true)}
+            className="w-full px-4 py-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+          >
+            <History className="w-4 h-4" />
+            View History
+          </button>
         </div>
       </div>
 
@@ -201,6 +225,13 @@ export function MirrorInterface() {
           </div>
         </div>
       </div>
+
+      {/* History Drawer */}
+      <HistoryDrawer
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        onReplayConversation={handleReplayConversation}
+      />
     </div>
   );
 }

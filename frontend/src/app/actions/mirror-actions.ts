@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { videos } from "@/db/schema";
+import { videos, conversations } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { searchVideos, queryMemoryService } from "@/services/memory-service";
 import type { QueryMemoryResponse } from "@/types/memory";
@@ -87,6 +87,28 @@ export async function queryMemory(
         success: false,
         error: result.message || "Failed to generate response",
       };
+    }
+
+    // Step 4: Save conversation to database
+    // Handle errors gracefully - if database save fails, still return the response
+    if (result.narrative && result.audioBase64 && result.videoUrl) {
+      try {
+        // Extract thumbnail URL from search results if available
+        const thumbnailUrl = searchResults.result.thumbnail_url || null;
+
+        await db.insert(conversations).values({
+          userPrompt,
+          videoId,
+          narrative: result.narrative,
+          audioBase64: result.audioBase64,
+          thumbnailUrl,
+          videoUrl: result.videoUrl,
+        });
+        console.log("✅ Conversation saved to database");
+      } catch (dbError) {
+        console.error("⚠️  Failed to save conversation to database:", dbError);
+        // Don't fail the request if database save fails
+      }
     }
 
     return {
