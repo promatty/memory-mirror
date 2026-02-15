@@ -1,12 +1,15 @@
 from http import HTTPStatus
 from fastapi import APIRouter
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import base64
+import json
+import re
 
 from ..core.models import TwelveLabsModel
 from ..core.config import settings
 from ..services.llm_service import get_llm_service
+from ..services.gemini_service import get_gemini_service
 from ..services.elevenlabs_service import get_elevenlabs_service
 
 router = APIRouter(
@@ -26,6 +29,47 @@ class QueryMemoryResponse(BaseModel):
     narrative: Optional[str] = None
     message: Optional[str] = None
     error: Optional[str] = None
+
+
+class SuggestedQuestionsRequest(BaseModel):
+    analysis_texts: List[str]
+
+
+class SuggestedQuestionsResponse(BaseModel):
+    questions: List[str]
+
+
+def _strip_code_fence(text: str) -> str:
+    lines = text.strip().splitlines()
+    if lines and lines[0].startswith("```"):
+        lines = lines[1:]
+    if lines and lines[-1].startswith("```"):
+        lines = lines[:-1]
+    return "\n".join(lines).strip()
+
+
+def _parse_questions(raw_text: str) -> List[str]:
+    cleaned = _strip_code_fence(raw_text)
+    json_candidate = cleaned
+
+    first_bracket = cleaned.find("[")
+    last_bracket = cleaned.rfind("]")
+    if first_bracket != -1 and last_bracket != -1 and last_bracket > first_bracket:
+        json_candidate = cleaned[first_bracket : last_bracket + 1]
+
+    try:
+        parsed = json.loads(json_candidate)
+        if isinstance(parsed, list):
+            return [str(item).strip() for item in parsed if str(item).strip()]
+    except json.JSONDecodeError:
+        pass
+
+    quoted = [match.strip() for match in re.findall(r"\"([^\"]+)\"", cleaned)]
+    if quoted:
+        return [item for item in quoted if item]
+
+    lines = [line.strip("- ") for line in cleaned.splitlines()]
+    return [line for line in lines if line and line not in {"[", "]"}]
 
 @router.post("/generate-response", response_model=QueryMemoryResponse)
 async def generate_response(request: QueryMemoryRequest):
@@ -67,7 +111,8 @@ async def generate_response(request: QueryMemoryRequest):
         narrative = await llm_service.generate_response(
             prompt=request.user_prompt,
             context=request.analysis_text,
-            system_instruction="Talk as if you were speaking in first person about your own memories and experiences."
+            system_instruction="Talk as if you were speaking in first person about your own memories and experiences. In your response, there will a be a bunch of keywords and metadata, " \
+            "shape your response around those keywords and metadata that are in the analysis text."
         )
 
         print(f"✅ Generated narrative ({len(narrative)} chars)")
@@ -105,4 +150,39 @@ async def generate_response(request: QueryMemoryRequest):
             message=f"Failed to generate response: {str(e)}",
             error=str(e),
         )
+
+
+@router.post("/suggest-questions", response_model=SuggestedQuestionsResponse)
+async def suggest_questions(request: SuggestedQuestionsRequest):
+    """
+    Generate suggested questions based on stored analysis texts.
+
+    This endpoint:
+    1. Receives a list of analysis texts from Next.js
+    2. Uses Gemini to generate short, natural suggested questions
+    3. Returns an array of 3 questions that are relevant to the user's memories and the video content and should be 10 words or less
+    """
+    prompt = (
+        "You are generating suggested questions for a personal memory app. Also, for the memories, if there are any specific names, places, times, etc. Please ask them in the questions."
+        "Given the memory summaries below, produce 3 short, specific questions that are 8 words or less "
+        "the user might ask. Return ONLY a JSON array of strings on a single line, "
+        "no extra text. Do not use code fences."
+    )
+
+    try:
+        gemini_service = get_gemini_service()
+        response_text = await gemini_service.chat(
+            system_prompt=prompt,
+            user_prompt=request.analysis_texts,
+            max_output_tokens=3000,
+            temperature=0.4,
+        )
+
+        print(f"Generated response: {response_text}")
+
+        questions = _parse_questions(response_text)
+        return SuggestedQuestionsResponse(questions=questions[:3])
+    except Exception as e:
+        print(f"❌ Error generating suggested questions: {str(e)}")
+        return SuggestedQuestionsResponse(questions=[])
 

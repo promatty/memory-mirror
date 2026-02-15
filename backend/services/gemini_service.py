@@ -11,7 +11,7 @@ class GeminiService:
     - Exposes an async `chat` method that returns the generated text
     """
 
-    DEFAULT_MODEL_ID = "gemini-2.0-flash-exp"
+    DEFAULT_MODEL_ID = "gemini-2.5-flash"
 
     def __init__(self, model_id: str | None = None):
         if not settings.GEMINI_API_KEY:
