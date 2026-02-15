@@ -95,7 +95,7 @@ export function MirrorInterface() {
   return (
     <div className="h-screen flex">
       {/* left sidebar */}
-      <div className="w-64 border-r border-border bg-surface flex flex-col">
+      <div className="w-1/3 border-r border-border bg-surface flex flex-col">
         {/* audio waveform visualization */}
         <div className="h-1/2">
           <VoiceVisualizer src={currentAudioUrl ?? undefined} />

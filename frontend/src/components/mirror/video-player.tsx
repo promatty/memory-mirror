@@ -1,25 +1,29 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef } from "react";
 
 interface VideoPlayerProps {
-  videoUrl: string | null
-  isPlaying: boolean
-  onPlayStateChange: (isPlaying: boolean) => void
+  videoUrl: string | null;
+  isPlaying: boolean;
+  onPlayStateChange: (isPlaying: boolean) => void;
 }
 
-export function VideoPlayer({ videoUrl, isPlaying, onPlayStateChange }: VideoPlayerProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
+export function VideoPlayer({
+  videoUrl,
+  isPlaying,
+  onPlayStateChange,
+}: VideoPlayerProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (!videoRef.current) return
+    if (!videoRef.current) return;
 
     if (isPlaying) {
-      videoRef.current.play().catch(console.error)
+      videoRef.current.play().catch(console.error);
     } else {
-      videoRef.current.pause()
+      videoRef.current.pause();
     }
-  }, [isPlaying])
+  }, [isPlaying]);
 
   return (
     <div className="w-full h-full flex items-center justify-center">
@@ -32,6 +36,7 @@ export function VideoPlayer({ videoUrl, isPlaying, onPlayStateChange }: VideoPla
             onPlay={() => onPlayStateChange(true)}
             onPause={() => onPlayStateChange(false)}
             onEnded={() => onPlayStateChange(false)}
+            loop
             controls
           />
         ) : (
@@ -45,5 +50,5 @@ export function VideoPlayer({ videoUrl, isPlaying, onPlayStateChange }: VideoPla
         )}
       </div>
     </div>
-  )
+  );
 }
