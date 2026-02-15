@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mic, Send, Square, History } from "lucide-react";
+import { Mic, Send, Square, History, Brain } from "lucide-react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { VideoPlayer } from "./video-player";
 import { TranscriptViewer, type TranscriptViewerRef } from "./transcript-viewer";
 import { UploadSection } from "./upload-section";
@@ -22,6 +23,7 @@ import type { ConversationHistoryItem } from "@/app/actions/conversation-actions
 
 export function MirrorInterface() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const transcriptViewerRef = useRef<TranscriptViewerRef>(null);
   const [inputText, setInputText] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
@@ -179,6 +181,13 @@ export function MirrorInterface() {
           >
             <History className="w-4 h-4" />
             View History
+          </button>
+          <button
+            onClick={() => router.push('/embedding')}
+            className="w-full px-4 py-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all flex items-center justify-center gap-2 text-sm font-medium"
+          >
+            <Brain className="w-4 h-4" />
+            View Memory Embedding
           </button>
         </div>
       </div>

@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     # gemini credentials
     GEMINI_API_KEY: str = ""
 
+    # chromadb credentials
+    CHROMA_API_KEY: str = ""
+    CHROMA_TENANT: str = ""
+    CHROMA_DATABASE: str = ""
+
 
     @field_validator("ALLOWED_ORIGINS")
     @classmethod
